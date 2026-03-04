@@ -54,7 +54,7 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
     return (clientX - rect.left) / rect.width
   }, [])
 
-  const getTriggerAt = useCallback((clientX, clientY) => {
+  const getTriggerAt = useCallback((clientX, clientY, hitRadius = TRIGGER_RADIUS + 4) => {
     const rect = svgRef.current?.getBoundingClientRect()
     if (!rect) return null
     const x = clientX - rect.left
@@ -65,7 +65,7 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       const t = triggers[i]
       const tx = t.position * rect.width
       const dist = Math.sqrt((x - tx) ** 2 + (y - cx) ** 2)
-      if (dist <= TRIGGER_RADIUS + 4) return t
+      if (dist <= hitRadius) return t
     }
     return null
   }, [triggers])
@@ -84,13 +84,11 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       // Immediately start direction drag
       const startY = e.clientY
       const startDir = 0
-      let committed = false
 
       const onMove = (me) => {
         const dy = startY - me.clientY
         const direction = Math.max(-1, Math.min(1, startDir + dy / STEM_MAX))
         onUpdate(laneId, newId, { direction })
-        committed = true
       }
       const onUp = () => {
         window.removeEventListener('mousemove', onMove)
@@ -145,6 +143,88 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
     if (target) onDelete(laneId, target.id)
   }, [getTriggerAt, laneId, onDelete])
 
+  const handleTouchStart = useCallback((e) => {
+    e.preventDefault()
+    if (e.touches.length !== 1) return
+    const touch = e.touches[0]
+    // Use a larger hit radius for touch
+    const target = getTriggerAt(touch.clientX, touch.clientY, TRIGGER_RADIUS + 12)
+
+    if (!target) {
+      // Tap empty area → place new trigger, then drag to set direction
+      const pos = Math.max(0, Math.min(1, getSvgX(touch.clientX)))
+      const newId = onAdd(laneId, pos)
+
+      const startY = touch.clientY
+
+      const onMove = (te) => {
+        if (te.touches.length !== 1) return
+        const t = te.touches[0]
+        const dy = startY - t.clientY
+        const direction = Math.max(-1, Math.min(1, dy / STEM_MAX))
+        onUpdate(laneId, newId, { direction })
+      }
+
+      const onEnd = () => {
+        window.removeEventListener('touchmove', onMove)
+        window.removeEventListener('touchend', onEnd)
+      }
+
+      window.addEventListener('touchmove', onMove, { passive: false })
+      window.addEventListener('touchend', onEnd)
+      return
+    }
+
+    // Existing trigger — long press (500ms) to delete, drag to move/adjust direction
+    const startX = touch.clientX
+    const startY = touch.clientY
+    const startPos = target.position
+    const startDir = target.direction
+    let mode = null // 'move' | 'direction'
+    let deleted = false
+    const rect = svgRef.current?.getBoundingClientRect()
+
+    const longPressTimer = setTimeout(() => {
+      deleted = true
+      onDelete(laneId, target.id)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }, 500)
+
+    const onMove = (te) => {
+      if (deleted || te.touches.length !== 1) return
+      const t = te.touches[0]
+      const dx = t.clientX - startX
+      const dy = t.clientY - startY
+
+      if (!mode) {
+        if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+          clearTimeout(longPressTimer)
+          mode = Math.abs(dx) > Math.abs(dy) ? 'move' : 'direction'
+        }
+        return
+      }
+
+      if (mode === 'move') {
+        const deltaPos = dx / (rect?.width || 1)
+        const pos = Math.max(0, Math.min(1, startPos + deltaPos))
+        onUpdate(laneId, target.id, { position: pos })
+      } else {
+        const direction = Math.max(-1, Math.min(1, startDir - dy / STEM_MAX))
+        onUpdate(laneId, target.id, { direction })
+      }
+    }
+
+    const onEnd = () => {
+      clearTimeout(longPressTimer)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }
+
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onEnd)
+  }, [getTriggerAt, getSvgX, laneId, onAdd, onUpdate, onDelete])
+
   const cy = BAR_HEIGHT / 2
   const playX = `${playheadPosition * 100}%`
 
@@ -156,7 +236,8 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       height={BAR_HEIGHT}
       onMouseDown={handleMouseDown}
       onContextMenu={handleContextMenu}
-      style={{ display: 'block', cursor: 'crosshair' }}
+      onTouchStart={handleTouchStart}
+      style={{ display: 'block', cursor: 'crosshair', touchAction: 'none' }}
     >
       {/* Center line */}
       <line

@@ -36,12 +36,41 @@ export function Knob({ min, max, value, onChange, label, decimals = 1, unit = ''
     window.addEventListener('mouseup', onUp)
   }, [value, min, max, range, onChange])
 
+  const onTouchStart = useCallback((e) => {
+    e.preventDefault()
+    const touch = e.touches[0]
+    dragging.current = true
+    startY.current = touch.clientY
+    startVal.current = value
+
+    const onMove = (te) => {
+      if (!dragging.current) return
+      const t = te.touches[0]
+      const dy = startY.current - t.clientY
+      const sensitivity = 0.5
+      const delta = (dy / 100) * range * sensitivity
+      const next = Math.min(max, Math.max(min, startVal.current + delta))
+      onChange(next)
+    }
+
+    const onEnd = () => {
+      dragging.current = false
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }
+
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onEnd)
+  }, [value, min, max, range, onChange])
+
   return (
     <div className="knob-wrap">
       <div
         className="knob"
         onMouseDown={onMouseDown}
+        onTouchStart={onTouchStart}
         title={`${label}: ${value.toFixed(decimals)}${unit}`}
+        style={{ touchAction: 'none' }}
       >
         <div
           className="knob-indicator"

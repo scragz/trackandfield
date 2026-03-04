@@ -107,10 +107,10 @@ export default function App() {
         gap: '20px',
         flexWrap: 'wrap',
       }}>
-        <span>Click bar → place trigger</span>
+        <span>Tap bar → place trigger</span>
         <span>Drag up/down → ping / swell</span>
         <span>Drag left/right → reposition</span>
-        <span>Right-click → delete</span>
+        <span>Right-click / long-press → delete</span>
       </div>
 
       {/* Lanes */}
