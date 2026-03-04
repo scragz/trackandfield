@@ -9,7 +9,7 @@
   --accent: #7c6af7;
   --accent-dim: #4a3fa0;
   --text: #c8c8d8;
-  --text-dim: #5a5a7a;
+  --text-dim: #8888a8;
   --ping: #a78bfa;
   --swell: #34d399;
   --glow-ping: rgba(167, 139, 250, 0.6);
@@ -80,27 +80,28 @@ body {
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-/* Upload button */
-.upload-btn {
-  background: var(--surface);
+/* Source / waveform selector pills */
+.source-pill {
+  background: transparent;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
-  letter-spacing: 0.05em;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
 }
 
-.upload-btn:hover {
+.source-pill:hover {
   border-color: var(--accent-dim);
   color: var(--text);
 }
 
-.upload-btn.has-sample {
-  border-color: var(--accent-dim);
+.source-pill.active {
+  border-color: var(--accent);
   color: var(--accent);
+  background: rgba(124, 106, 247, 0.1);
 }

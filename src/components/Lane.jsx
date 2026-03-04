@@ -3,11 +3,21 @@ import { getContext } from 'tone'
 import { Knob } from './Knob.jsx'
 import { TriggerBar } from './TriggerBar.jsx'
 
+const WAVEFORMS = [
+  { id: 'sine',     label: 'sin' },
+  { id: 'triangle', label: 'tri' },
+  { id: 'sawtooth', label: 'saw' },
+  { id: 'square',   label: 'sqr' },
+]
+
 export function Lane({
   lane,
   laneIndex,
   playheadPosition,
   onSampleUpload,
+  onSourceTypeChange,
+  onToneFrequencyChange,
+  onToneWaveformChange,
   onVolumeChange,
   onResonanceChange,
   onBaseCutoffChange,
@@ -32,7 +42,7 @@ export function Lane({
   }, [lane.id, onSampleUpload])
 
   const sampleName = lane.sampleUrl
-    ? lane.sampleUrl.split('/').pop()?.substring(0, 16) || 'sample'
+    ? lane.sampleUrl.split('/').pop()?.substring(0, 14) || 'sample'
     : null
 
   return (
@@ -46,7 +56,7 @@ export function Lane({
       gap: '8px',
     }}>
       {/* Lane header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
         {/* Lane label */}
         <span style={{
           fontSize: '10px',
@@ -54,17 +64,51 @@ export function Lane({
           letterSpacing: '0.15em',
           textTransform: 'uppercase',
           minWidth: '44px',
+          flexShrink: 0,
         }}>
           Lane {laneIndex + 1}
         </span>
 
-        {/* Upload */}
-        <button
-          className={`upload-btn ${lane.sampleUrl ? 'has-sample' : ''}`}
-          onClick={() => fileRef.current?.click()}
-        >
-          {sampleName || 'Upload'}
-        </button>
+        {/* Source type selector */}
+        <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+          <button
+            className={`source-pill ${lane.sourceType === 'noise' ? 'active' : ''}`}
+            onClick={() => onSourceTypeChange(lane.id, 'noise')}
+            title="White noise through the filter"
+          >
+            noise
+          </button>
+          <button
+            className={`source-pill ${lane.sourceType === 'tone' ? 'active' : ''}`}
+            onClick={() => onSourceTypeChange(lane.id, 'tone')}
+            title="Oscillator — set frequency below"
+          >
+            tone
+          </button>
+          <button
+            className={`source-pill ${lane.sourceType === 'sample' ? 'active' : ''}`}
+            onClick={() => fileRef.current?.click()}
+            title={sampleName ? 'Click to replace sample' : 'Upload a sample'}
+          >
+            {sampleName || '↑ sample'}
+          </button>
+        </div>
+
+        {/* Waveform selector — only when tone */}
+        {lane.sourceType === 'tone' && (
+          <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+            {WAVEFORMS.map(w => (
+              <button
+                key={w.id}
+                className={`source-pill ${lane.toneWaveform === w.id ? 'active' : ''}`}
+                onClick={() => onToneWaveformChange(lane.id, w.id)}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <input
           ref={fileRef}
           type="file"
@@ -75,6 +119,16 @@ export function Lane({
 
         {/* Knobs */}
         <div style={{ display: 'flex', gap: '16px', marginLeft: 'auto' }}>
+          {lane.sourceType === 'tone' && (
+            <Knob
+              label="Freq"
+              min={20} max={2000}
+              value={lane.toneFrequency}
+              onChange={v => onToneFrequencyChange(lane.id, v)}
+              decimals={0}
+              unit="hz"
+            />
+          )}
           <Knob
             label="Vol"
             min={0} max={1}

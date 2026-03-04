@@ -4,6 +4,9 @@ import { engine } from '../audio/engine.js'
 
 const DEFAULT_LANE = () => ({
   id: uuidv4(),
+  sourceType: 'noise',  // 'noise' | 'tone' | 'sample'
+  toneFrequency: 110,   // Hz — used when sourceType === 'tone'
+  toneWaveform: 'sine', // sine | triangle | sawtooth | square
   sampleUrl: null,
   sampleBuffer: null,
   volume: 0.8,
@@ -53,9 +56,30 @@ export function useAppState() {
   const updateLaneSample = useCallback((laneId, buffer, url) => {
     setLanes(prev => prev.map(l => {
       if (l.id !== laneId) return l
-      return { ...l, sampleUrl: url, sampleBuffer: buffer }
+      return { ...l, sourceType: 'sample', sampleUrl: url, sampleBuffer: buffer }
     }))
-    engine.setLaneBuffer(laneId, buffer)
+    engine.setLaneBuffer(laneId, buffer) // engine also sets sourceType = 'sample'
+  }, [])
+
+  const updateLaneSourceType = useCallback((laneId, type) => {
+    setLanes(prev => prev.map(l =>
+      l.id === laneId ? { ...l, sourceType: type } : l
+    ))
+    engine.setLaneSourceType(laneId, type)
+  }, [])
+
+  const updateLaneToneFrequency = useCallback((laneId, hz) => {
+    setLanes(prev => prev.map(l =>
+      l.id === laneId ? { ...l, toneFrequency: hz } : l
+    ))
+    engine.setLaneToneFrequency(laneId, hz)
+  }, [])
+
+  const updateLaneToneWaveform = useCallback((laneId, waveform) => {
+    setLanes(prev => prev.map(l =>
+      l.id === laneId ? { ...l, toneWaveform: waveform } : l
+    ))
+    engine.setLaneToneWaveform(laneId, waveform)
   }, [])
 
   const updateLaneVolume = useCallback((laneId, vol) => {
@@ -135,6 +159,9 @@ export function useAppState() {
     playheadPosition,
     lanes,
     updateLaneSample,
+    updateLaneSourceType,
+    updateLaneToneFrequency,
+    updateLaneToneWaveform,
     updateLaneVolume,
     updateLaneResonance,
     updateLaneBaseCutoff,

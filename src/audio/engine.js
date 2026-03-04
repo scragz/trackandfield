@@ -30,6 +30,9 @@ class LaneAudio {
 
     this.source = null
     this.buffer = null
+    this.sourceType = 'noise'   // 'noise' | 'tone' | 'sample'
+    this.toneFrequency = 110    // Hz
+    this.toneWaveform = 'sine'  // sine | triangle | sawtooth | square
   }
 
   setBuffer(audioBuffer) {
@@ -50,13 +53,23 @@ class LaneAudio {
 
   startSource(loopEnd) {
     this.stopSource()
-    if (!this.buffer) return
 
-    this.source = new Tone.Player(this.buffer)
-    this.source.loop = true
-    this.source.loopEnd = Math.min(this.buffer.duration, loopEnd)
-    this.source.connect(this.filter)
-    this.source.sync().start(0)
+    if (this.sourceType === 'sample' && this.buffer) {
+      this.source = new Tone.Player(this.buffer)
+      this.source.loop = true
+      this.source.loopEnd = Math.min(this.buffer.duration, loopEnd)
+      this.source.connect(this.filter)
+      this.source.sync().start(0)
+    } else if (this.sourceType === 'tone') {
+      this.source = new Tone.Oscillator(this.toneFrequency, this.toneWaveform)
+      this.source.connect(this.filter)
+      this.source.start()
+    } else {
+      // noise (default)
+      this.source = new Tone.Noise('white')
+      this.source.connect(this.filter)
+      this.source.start()
+    }
   }
 
   stopSource() {
@@ -138,8 +151,39 @@ class AudioEngine {
     const lane = this.lanes.get(id)
     if (lane) {
       lane.setBuffer(audioBuffer)
+      lane.sourceType = 'sample'
       if (this.playing) {
         lane.startSource(this.barLength)
+      }
+    }
+  }
+
+  setLaneSourceType(id, type) {
+    const lane = this.lanes.get(id)
+    if (lane) {
+      lane.sourceType = type
+      if (this.playing) {
+        lane.startSource(this.barLength)
+      }
+    }
+  }
+
+  setLaneToneFrequency(id, hz) {
+    const lane = this.lanes.get(id)
+    if (lane) {
+      lane.toneFrequency = hz
+      if (this.playing && lane.sourceType === 'tone' && lane.source) {
+        lane.source.frequency.rampTo(hz, 0.05)
+      }
+    }
+  }
+
+  setLaneToneWaveform(id, waveform) {
+    const lane = this.lanes.get(id)
+    if (lane) {
+      lane.toneWaveform = waveform
+      if (this.playing && lane.sourceType === 'tone' && lane.source) {
+        lane.source.type = waveform
       }
     }
   }
