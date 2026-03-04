@@ -3,17 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --bg: #000018;              /* NES dark navy — scoreboard backdrop */
-  --surface: #000060;         /* NES deep blue — like the T&F sky */
-  --border: #0044c0;          /* Medium NES blue */
-  --accent: #fcfc00;          /* NES yellow — classic score/highlight color */
-  --accent-dim: #a0a000;      /* Darker yellow for shadows */
-  --text: #fcfcfc;            /* NES white */
-  --text-dim: #8888c0;        /* Muted blue-grey */
-  --ping: #fc0000;            /* NES red — the runner */
-  --swell: #00a800;           /* NES green — the field/grass */
-  --glow-ping: rgba(252, 0, 0, 0.6);
-  --glow-swell: rgba(0, 168, 0, 0.6);
+  --bg: #120704;              /* Dark clay — the infield */
+  --surface: #7A3210;         /* Tartan track brown */
+  --surface-alt: #9B4418;     /* Lighter track brown — trigger bar */
+  --border: #ffffff;          /* White — lane markings */
+  --accent: #FFE566;          /* Gold — finish line, numbers */
+  --accent-dim: #A07A00;      /* Dark gold */
+  --text: #ffffff;            /* White */
+  --text-dim: #D4956A;        /* Warm tan */
+  --ping: #ffffff;            /* White — ping up */
+  --swell: #FFE566;           /* Gold — swell down */
+  --glow-ping: rgba(255, 255, 255, 0.6);
+  --glow-swell: rgba(255, 229, 102, 0.6);
 }
 
 body {
@@ -23,14 +24,6 @@ body {
   margin: 0;
   min-height: 100vh;
   user-select: none;
-  /* Subtle scanline overlay for CRT feel */
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.15) 2px,
-    rgba(0, 0, 0, 0.15) 4px
-  );
 }
 
 /* Knob styles */
@@ -45,17 +38,17 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #000040;
+  background: #3D1505;
   border: 2px solid var(--border);
   position: relative;
   cursor: ns-resize;
-  box-shadow: 0 0 0 1px #000018, 0 0 6px var(--accent-dim);
+  box-shadow: 0 0 0 1px #120704, 0 0 6px var(--accent-dim);
   transition: border-color 0.1s;
 }
 
 .knob:hover {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px #000018, 0 0 10px var(--accent);
+  box-shadow: 0 0 0 1px #120704, 0 0 10px var(--accent);
 }
 
 .knob-indicator {
@@ -73,7 +66,7 @@ body {
 
 /* Trigger bar */
 .trigger-bar {
-  background: var(--surface);
+  background: var(--surface-alt);
   border: 2px solid var(--border);
   border-radius: 0;
   position: relative;
@@ -112,5 +105,5 @@ body {
 .source-pill.active {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(252, 252, 0, 0.1);
+  background: rgba(255, 229, 102, 0.15);
 }
