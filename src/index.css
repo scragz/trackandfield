@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --border: #1e1e2e;
+  --accent: #7c6af7;
+  --accent-dim: #4a3fa0;
+  --text: #c8c8d8;
+  --text-dim: #5a5a7a;
+  --ping: #a78bfa;
+  --swell: #34d399;
+  --glow-ping: rgba(167, 139, 250, 0.6);
+  --glow-swell: rgba(52, 211, 153, 0.6);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;
+  margin: 0;
+  min-height: 100vh;
+  user-select: none;
+}
+
+/* Knob styles */
+.knob-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.knob {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #2a2a3e, #13131a);
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: ns-resize;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: border-color 0.15s;
+}
+
+.knob:hover {
+  border-color: var(--accent-dim);
+}
+
+.knob-indicator {
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 1px;
+  left: 50%;
+  top: 6px;
+  transform-origin: 50% calc(100% + 4px);
+  transform: translateX(-50%);
+  box-shadow: 0 0 4px var(--accent);
+}
+
+/* Trigger bar */
+.trigger-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Upload button */
+.upload-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.upload-btn:hover {
+  border-color: var(--accent-dim);
+  color: var(--text);
+}
+
+.upload-btn.has-sample {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
