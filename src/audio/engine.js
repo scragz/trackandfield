@@ -19,12 +19,14 @@ function lerp(a, b, t) {
 // Per-lane audio nodes
 class LaneAudio {
   constructor(destination) {
+    this.gateGain = new Tone.Gain(0)  // amplitude gate, starts silent
     this.filter = new Tone.Filter({
       type: 'lowpass',
       frequency: 80,
       Q: 1,
     })
     this.gain = new Tone.Gain(0.8)
+    this.gateGain.connect(this.filter)
     this.filter.connect(this.gain)
     this.gain.connect(destination)
 
@@ -58,16 +60,16 @@ class LaneAudio {
       this.source = new Tone.Player(this.buffer)
       this.source.loop = true
       this.source.loopEnd = Math.min(this.buffer.duration, loopEnd)
-      this.source.connect(this.filter)
+      this.source.connect(this.gateGain)
       this.source.sync().start(0)
     } else if (this.sourceType === 'tone') {
       this.source = new Tone.Oscillator(this.toneFrequency, this.toneWaveform)
-      this.source.connect(this.filter)
+      this.source.connect(this.gateGain)
       this.source.start()
     } else {
       // noise (default)
       this.source = new Tone.Noise('white')
-      this.source.connect(this.filter)
+      this.source.connect(this.gateGain)
       this.source.start()
     }
   }
@@ -90,15 +92,24 @@ class LaneAudio {
     freq.setValueAtTime(base, time)
     freq.linearRampToValueAtTime(peak, time + attack)
     freq.linearRampToValueAtTime(base, time + attack + decay)
+
+    // Amplitude envelope: gate opens with trigger, closes after decay
+    const g = this.gateGain.gain
+    g.cancelScheduledValues(time)
+    g.setValueAtTime(0, time)
+    g.linearRampToValueAtTime(1, time + attack)
+    g.linearRampToValueAtTime(0, time + attack + decay)
   }
 
   resetCutoff(baseCutoff) {
     const base = baseCutoff || this.baseCutoff || 80
     this.filter.frequency.rampTo(base, 0.1)
+    this.gateGain.gain.rampTo(0, 0.1)
   }
 
   dispose() {
     this.stopSource()
+    this.gateGain.dispose()
     this.filter.dispose()
     this.gain.dispose()
   }
