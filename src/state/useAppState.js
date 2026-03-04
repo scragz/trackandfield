@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { engine } from '../audio/engine.js'
 
@@ -103,6 +103,11 @@ export function useAppState() {
     engine.setLaneBaseCutoff(laneId, hz)
   }, [])
 
+  // Sync engine scheduling whenever lanes change while playing
+  useEffect(() => {
+    engine.rescheduleTriggers(lanes)
+  }, [lanes])
+
   // Trigger mutations
   const addTrigger = useCallback((laneId, position) => {
     const newTrigger = {
@@ -110,45 +115,33 @@ export function useAppState() {
       position,
       direction: 0,
     }
-    setLanes(prev => {
-      const next = prev.map(l =>
-        l.id === laneId
-          ? { ...l, triggers: [...l.triggers, newTrigger] }
-          : l
-      )
-      engine.rescheduleTriggers(next)
-      return next
-    })
+    setLanes(prev => prev.map(l =>
+      l.id === laneId
+        ? { ...l, triggers: [...l.triggers, newTrigger] }
+        : l
+    ))
     return newTrigger.id
   }, [])
 
   const updateTrigger = useCallback((laneId, triggerId, updates) => {
-    setLanes(prev => {
-      const next = prev.map(l =>
-        l.id === laneId
-          ? {
-              ...l,
-              triggers: l.triggers.map(t =>
-                t.id === triggerId ? { ...t, ...updates } : t
-              ),
-            }
-          : l
-      )
-      engine.rescheduleTriggers(next)
-      return next
-    })
+    setLanes(prev => prev.map(l =>
+      l.id === laneId
+        ? {
+            ...l,
+            triggers: l.triggers.map(t =>
+              t.id === triggerId ? { ...t, ...updates } : t
+            ),
+          }
+        : l
+    ))
   }, [])
 
   const deleteTrigger = useCallback((laneId, triggerId) => {
-    setLanes(prev => {
-      const next = prev.map(l =>
-        l.id === laneId
-          ? { ...l, triggers: l.triggers.filter(t => t.id !== triggerId) }
-          : l
-      )
-      engine.rescheduleTriggers(next)
-      return next
-    })
+    setLanes(prev => prev.map(l =>
+      l.id === laneId
+        ? { ...l, triggers: l.triggers.filter(t => t.id !== triggerId) }
+        : l
+    ))
   }, [])
 
   return {
