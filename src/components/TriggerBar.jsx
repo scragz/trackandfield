@@ -6,12 +6,12 @@ const STEM_MAX = 30  // max stem px from center
 const DRAG_THRESHOLD = 4 // px before we decide horizontal vs vertical
 
 function triggerColor(direction) {
-  // interpolate between swell (green) and ping (purple)
+  // interpolate between swell (gold) and ping (white)
   const t = (direction + 1) / 2
-  // ping: #a78bfa, swell: #34d399
-  const r = Math.round(lerp(0x34, 0xa7, t))
-  const g = Math.round(lerp(0xd3, 0x8b, t))
-  const b = Math.round(lerp(0x99, 0xfa, t))
+  // ping: #ffffff (white), swell: #FFE566 (gold)
+  const r = Math.round(lerp(0xFF, 0xFF, t))
+  const g = Math.round(lerp(0xE5, 0xFF, t))
+  const b = Math.round(lerp(0x66, 0xFF, t))
   return `rgb(${r},${g},${b})`
 }
 

@@ -75,7 +75,7 @@ export default function App() {
             decimals={0}
           />
           <span style={{ fontSize: '12px', color: 'var(--text)', minWidth: '30px' }}>
-            {bpm}
+            {Math.round(bpm)}
           </span>
         </div>
 
