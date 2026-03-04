@@ -12,6 +12,9 @@ export default function App() {
     playheadPosition,
     lanes,
     updateLaneSample,
+    updateLaneSourceType,
+    updateLaneToneFrequency,
+    updateLaneToneWaveform,
     updateLaneVolume,
     updateLaneResonance,
     updateLaneBaseCutoff,
@@ -123,6 +126,9 @@ export default function App() {
             laneIndex={i}
             playheadPosition={playheadPosition}
             onSampleUpload={updateLaneSample}
+            onSourceTypeChange={updateLaneSourceType}
+            onToneFrequencyChange={updateLaneToneFrequency}
+            onToneWaveformChange={updateLaneToneWaveform}
             onVolumeChange={updateLaneVolume}
             onResonanceChange={updateLaneResonance}
             onBaseCutoffChange={updateLaneBaseCutoff}
