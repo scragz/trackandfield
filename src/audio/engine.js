@@ -50,13 +50,19 @@ class LaneAudio {
 
   startSource(loopEnd) {
     this.stopSource()
-    if (!this.buffer) return
 
-    this.source = new Tone.Player(this.buffer)
-    this.source.loop = true
-    this.source.loopEnd = Math.min(this.buffer.duration, loopEnd)
-    this.source.connect(this.filter)
-    this.source.sync().start(0)
+    if (this.buffer) {
+      this.source = new Tone.Player(this.buffer)
+      this.source.loop = true
+      this.source.loopEnd = Math.min(this.buffer.duration, loopEnd)
+      this.source.connect(this.filter)
+      this.source.sync().start(0)
+    } else {
+      // Default: white noise through the filter — sounds great with filter sweeps
+      this.source = new Tone.Noise('white')
+      this.source.connect(this.filter)
+      this.source.start()
+    }
   }
 
   stopSource() {

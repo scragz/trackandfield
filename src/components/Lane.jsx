@@ -35,6 +35,11 @@ export function Lane({
     ? lane.sampleUrl.split('/').pop()?.substring(0, 16) || 'sample'
     : null
 
+  const sourceLabel = sampleName || 'Noise'
+  const sourceTitle = sampleName
+    ? 'Click to replace sample'
+    : 'White noise — click to upload a sample'
+
   return (
     <div style={{
       background: 'var(--surface)',
@@ -62,8 +67,9 @@ export function Lane({
         <button
           className={`upload-btn ${lane.sampleUrl ? 'has-sample' : ''}`}
           onClick={() => fileRef.current?.click()}
+          title={sourceTitle}
         >
-          {sampleName || 'Upload'}
+          {sourceLabel}
         </button>
         <input
           ref={fileRef}

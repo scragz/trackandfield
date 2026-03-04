@@ -9,7 +9,7 @@
   --accent: #7c6af7;
   --accent-dim: #4a3fa0;
   --text: #c8c8d8;
-  --text-dim: #5a5a7a;
+  --text-dim: #8888a8;
   --ping: #a78bfa;
   --swell: #34d399;
   --glow-ping: rgba(167, 139, 250, 0.6);
@@ -82,9 +82,9 @@ body {
 
 /* Upload button */
 .upload-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text);
   border-radius: 4px;
   padding: 4px 10px;
   font-size: 11px;
@@ -97,10 +97,11 @@ body {
 
 .upload-btn:hover {
   border-color: var(--accent-dim);
-  color: var(--text);
+  color: var(--accent);
 }
 
 .upload-btn.has-sample {
+  border-style: solid;
   border-color: var(--accent-dim);
   color: var(--accent);
 }

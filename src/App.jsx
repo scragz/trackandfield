@@ -110,7 +110,8 @@ export default function App() {
         <span>Tap bar → place trigger</span>
         <span>Drag up/down → ping / swell</span>
         <span>Drag left/right → reposition</span>
-        <span>Right-click / long-press → delete</span>
+        <span>Long-press → delete</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--text-dim)' }}>Each lane plays noise or a sample through a filter · triggers sweep the cutoff</span>
       </div>
 
       {/* Lanes */}
