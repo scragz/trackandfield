@@ -43,22 +43,24 @@ export default function App() {
         alignItems: 'center',
         gap: '24px',
         padding: '14px 24px',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '3px solid var(--accent)',
         background: 'var(--surface)',
         position: 'sticky',
         top: 0,
         zIndex: 10,
+        boxShadow: '0 4px 0 var(--accent-dim)',
       }}>
         <h1 style={{
-          fontSize: '13px',
-          fontWeight: '600',
-          letterSpacing: '0.25em',
-          textTransform: 'uppercase',
+          fontSize: '11px',
+          fontWeight: '400',
+          letterSpacing: '0.05em',
           color: 'var(--accent)',
           margin: 0,
           flexShrink: 0,
+          fontFamily: "'Press Start 2P', monospace",
+          textShadow: '2px 2px 0 var(--accent-dim)',
         }}>
-          Filterline
+          Track and Field
         </h1>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -81,18 +83,19 @@ export default function App() {
           onClick={handleTogglePlay}
           style={{
             marginLeft: 'auto',
-            background: playing ? 'var(--accent)' : 'transparent',
-            border: `1px solid ${playing ? 'var(--accent)' : 'var(--border)'}`,
-            color: playing ? '#fff' : 'var(--text)',
-            borderRadius: '4px',
-            padding: '6px 20px',
-            fontSize: '11px',
-            letterSpacing: '0.12em',
+            background: playing ? 'var(--accent)' : 'var(--surface)',
+            border: `2px solid ${playing ? 'var(--accent)' : 'var(--border)'}`,
+            color: playing ? 'var(--bg)' : 'var(--text)',
+            borderRadius: '0',
+            padding: '6px 16px',
+            fontSize: '9px',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
             cursor: 'pointer',
-            fontFamily: 'inherit',
-            transition: 'all 0.15s',
-            boxShadow: playing ? '0 0 12px var(--accent-dim)' : 'none',
+            fontFamily: "'Press Start 2P', monospace",
+            transition: 'all 0.1s',
+            boxShadow: playing ? '3px 3px 0 var(--accent-dim)' : '3px 3px 0 #000',
+            imageRendering: 'pixelated',
           }}
         >
           {playing ? '■ Stop' : '▶ Play'}
@@ -105,7 +108,8 @@ export default function App() {
         fontSize: '10px',
         color: 'var(--text-dim)',
         letterSpacing: '0.06em',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '2px solid var(--border)',
+        background: 'var(--bg)',
         display: 'flex',
         gap: '20px',
         flexWrap: 'wrap',
@@ -141,11 +145,13 @@ export default function App() {
 
       <footer style={{
         padding: '8px 24px',
-        borderTop: '1px solid var(--border)',
+        borderTop: '3px solid var(--border)',
         fontSize: '9px',
-        color: 'var(--text-dim)',
+        color: 'var(--accent-dim)',
         letterSpacing: '0.08em',
         textAlign: 'center',
+        fontFamily: "'Press Start 2P', monospace",
+        background: 'var(--surface)',
       }}>
         Track &amp; Field · filter-sequencer
       </footer>

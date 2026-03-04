@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #13131a;
-  --border: #1e1e2e;
-  --accent: #7c6af7;
-  --accent-dim: #4a3fa0;
-  --text: #c8c8d8;
-  --text-dim: #8888a8;
-  --ping: #a78bfa;
-  --swell: #34d399;
-  --glow-ping: rgba(167, 139, 250, 0.6);
-  --glow-swell: rgba(52, 211, 153, 0.6);
+  --bg: #000018;              /* NES dark navy — scoreboard backdrop */
+  --surface: #000060;         /* NES deep blue — like the T&F sky */
+  --border: #0044c0;          /* Medium NES blue */
+  --accent: #fcfc00;          /* NES yellow — classic score/highlight color */
+  --accent-dim: #a0a000;      /* Darker yellow for shadows */
+  --text: #fcfcfc;            /* NES white */
+  --text-dim: #8888c0;        /* Muted blue-grey */
+  --ping: #fc0000;            /* NES red — the runner */
+  --swell: #00a800;           /* NES green — the field/grass */
+  --glow-ping: rgba(252, 0, 0, 0.6);
+  --glow-swell: rgba(0, 168, 0, 0.6);
 }
 
 body {
@@ -23,6 +23,14 @@ body {
   margin: 0;
   min-height: 100vh;
   user-select: none;
+  /* Subtle scanline overlay for CRT feel */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
 }
 
 /* Knob styles */
@@ -37,16 +45,17 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #2a2a3e, #13131a);
-  border: 1px solid var(--border);
+  background: #000040;
+  border: 2px solid var(--border);
   position: relative;
   cursor: ns-resize;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-  transition: border-color 0.15s;
+  box-shadow: 0 0 0 1px #000018, 0 0 6px var(--accent-dim);
+  transition: border-color 0.1s;
 }
 
 .knob:hover {
-  border-color: var(--accent-dim);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px #000018, 0 0 10px var(--accent);
 }
 
 .knob-indicator {
@@ -54,7 +63,7 @@ body {
   width: 2px;
   height: 10px;
   background: var(--accent);
-  border-radius: 1px;
+  border-radius: 0;
   left: 50%;
   top: 6px;
   transform-origin: 50% calc(100% + 4px);
@@ -65,8 +74,8 @@ body {
 /* Trigger bar */
 .trigger-bar {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 2px solid var(--border);
+  border-radius: 0;
   position: relative;
   overflow: hidden;
   cursor: crosshair;
@@ -78,30 +87,30 @@ body {
   height: 4px;
 }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
 
 /* Source / waveform selector pills */
 .source-pill {
   background: transparent;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   color: var(--text-dim);
-  border-radius: 3px;
+  border-radius: 0;
   padding: 3px 8px;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.12s;
+  transition: all 0.1s;
 }
 
 .source-pill:hover {
-  border-color: var(--accent-dim);
+  border-color: var(--accent);
   color: var(--text);
 }
 
 .source-pill.active {
   border-color: var(--accent);
   color: var(--accent);
-  background: rgba(124, 106, 247, 0.1);
+  background: rgba(252, 252, 0, 0.1);
 }
