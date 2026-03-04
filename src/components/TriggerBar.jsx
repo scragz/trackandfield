@@ -39,13 +39,13 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       }
     })
 
+    prevPlayhead.current = curr
+
     if (fired.size > 0) {
       setFiredIds(fired)
       const timer = setTimeout(() => setFiredIds(new Set()), 200)
       return () => clearTimeout(timer)
     }
-
-    prevPlayhead.current = curr
   }, [playheadPosition, triggers])
 
   const getSvgX = useCallback((clientX) => {

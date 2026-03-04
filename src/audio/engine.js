@@ -86,16 +86,22 @@ class LaneAudio {
   fireTrigger(time, direction, baseCutoff) {
     const { attack, decay, peak } = getTriggerShape(direction)
     const base = baseCutoff || this.baseCutoff || 80
+    const now = Tone.now()
 
+    // Cancel from context start (time=0) to clear accumulated events from
+    // previous loop iterations, then anchor current resting values at "now"
+    // so the param holds correctly until the trigger time.
     const freq = this.filter.frequency
-    freq.cancelScheduledValues(time)
+    freq.cancelScheduledValues(0)
+    freq.setValueAtTime(base, now)
     freq.setValueAtTime(base, time)
     freq.linearRampToValueAtTime(peak, time + attack)
     freq.linearRampToValueAtTime(base, time + attack + decay)
 
     // Amplitude envelope: gate opens with trigger, closes after decay
     const g = this.gateGain.gain
-    g.cancelScheduledValues(time)
+    g.cancelScheduledValues(0)
+    g.setValueAtTime(0, now)
     g.setValueAtTime(0, time)
     g.linearRampToValueAtTime(1, time + attack)
     g.linearRampToValueAtTime(0, time + attack + decay)
