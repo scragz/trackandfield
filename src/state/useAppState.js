@@ -6,8 +6,9 @@ const DEFAULT_LANE = () => ({
   id: uuidv4(),
   sourceType: 'noise',    // 'noise' | 'tone' | 'sample'
   noiseType: 'white',     // 'white' | 'pink' | 'brown'
-  toneFrequency: 110,     // Hz — used when sourceType === 'tone'
+  toneFrequency: 110,     // Hz
   toneWaveform: 'sine',   // sine | triangle | sawtooth | square
+  fmIndexes: [0, 0, 0, 0], // FM deviation (Hz) from each of the 4 lanes (pre-filter)
   sampleUrl: null,
   sampleBuffer: null,
   volume: 0.8,
@@ -121,6 +122,15 @@ export function useAppState() {
     engine.setLaneFilterType(laneId, type)
   }, [])
 
+  const updateLaneFmIndex = useCallback((carrierId, modulatorPosition, value) => {
+    setLanes(prev => prev.map(l =>
+      l.id === carrierId
+        ? { ...l, fmIndexes: l.fmIndexes.map((v, i) => i === modulatorPosition ? value : v) }
+        : l
+    ))
+    engine.setLaneFmIndex(carrierId, modulatorPosition, value)
+  }, [])
+
   // Sync engine scheduling whenever lanes change while playing
   useEffect(() => {
     engine.rescheduleTriggers(lanes)
@@ -190,6 +200,7 @@ export function useAppState() {
     updateLaneNoiseType,
     updateLaneToneFrequency,
     updateLaneToneWaveform,
+    updateLaneFmIndex,
     updateLaneVolume,
     updateLaneResonance,
     updateLaneBaseCutoff,

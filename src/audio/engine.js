@@ -37,7 +37,16 @@ class LaneAudio {
     this.filter.connect(this.gain)
     this.gain.connect(destination)
 
+    // Pre-gate tap: raw oscillator signal routed to other lanes' frequency inputs.
+    // Always active, unaffected by gating/filter.
+    this.fmTap = new Tone.Gain(1)
+
+    // Incoming FM connections: modulatorId → { gain: Tone.Gain, modulatorLane: LaneAudio }
+    // Each gain scales the modulator's fmTap signal (Hz of frequency deviation).
+    this.fmConnections = new Map()
+
     this.source = null
+    this._runningSourceType = null  // tracks what source type is currently active
     this.buffer = null
     this.sourceType = 'noise'   // 'noise' | 'tone' | 'sample'
     this.noiseType = 'white'    // 'white' | 'pink' | 'brown'
@@ -69,6 +78,23 @@ class LaneAudio {
     this.noiseType = type
   }
 
+  // Set FM modulation index from a given modulator lane.
+  // value is frequency deviation in Hz (gain applied to modulator's unit-amplitude signal).
+  setFmIndex(modulatorLane, modulatorId, value) {
+    let conn = this.fmConnections.get(modulatorId)
+    if (conn) {
+      conn.gain.gain.rampTo(value, 0.05)
+    } else {
+      const gain = new Tone.Gain(value)
+      modulatorLane.fmTap.connect(gain)
+      // Connect to carrier's frequency if it's currently a tone oscillator
+      if (this._runningSourceType === 'tone' && this.source) {
+        gain.connect(this.source.frequency)
+      }
+      this.fmConnections.set(modulatorId, { gain, modulatorLane })
+    }
+  }
+
   startSource(loopEnd) {
     this.stopSource()
 
@@ -77,25 +103,42 @@ class LaneAudio {
       this.source.loop = true
       this.source.loopEnd = Math.min(this.buffer.duration, loopEnd)
       this.source.connect(this.gateGain)
+      this.source.connect(this.fmTap)
       this.source.sync().start(0)
+      this._runningSourceType = 'sample'
     } else if (this.sourceType === 'tone') {
       this.source = new Tone.Oscillator(this.toneFrequency, this.toneWaveform)
       this.source.connect(this.gateGain)
+      this.source.connect(this.fmTap)
+      // Reconnect all incoming FM gains to the new oscillator's frequency
+      this.fmConnections.forEach(({ gain }) => {
+        gain.connect(this.source.frequency)
+      })
       this.source.start()
+      this._runningSourceType = 'tone'
     } else {
       // noise
       this.source = new Tone.Noise(this.noiseType || 'white')
       this.source.connect(this.gateGain)
+      this.source.connect(this.fmTap)
       this.source.start()
+      this._runningSourceType = 'noise'
     }
   }
 
   stopSource() {
     if (this.source) {
+      // Disconnect FM gains from this oscillator's frequency before disposing
+      if (this._runningSourceType === 'tone') {
+        this.fmConnections.forEach(({ gain }) => {
+          try { gain.disconnect(this.source.frequency) } catch (_) {}
+        })
+      }
       try { this.source.unsync() } catch (_) {}
       try { this.source.stop() } catch (_) {}
       this.source.disconnect()
       this.source = null
+      this._runningSourceType = null
     }
   }
 
@@ -131,6 +174,9 @@ class LaneAudio {
 
   dispose() {
     this.stopSource()
+    this.fmConnections.forEach(({ gain }) => gain.dispose())
+    this.fmConnections.clear()
+    this.fmTap.dispose()
     this.gateGain.dispose()
     this.filter.dispose()
     this.gain.dispose()
@@ -142,7 +188,8 @@ class AudioEngine {
   constructor() {
     this.master = new Tone.Gain(0.9)
     this.master.toDestination()
-    this.lanes = new Map() // laneId → LaneAudio
+    this.lanes = new Map()      // laneId → LaneAudio
+    this.laneIdOrder = []       // ordered list of lane IDs (for FM index lookup by position)
     this.scheduledEvents = []
     this.bpm = 120
     this.barLength = this._calcBarLength(120)
@@ -165,6 +212,7 @@ class AudioEngine {
   addLane(id) {
     if (!this.lanes.has(id)) {
       this.lanes.set(id, new LaneAudio(this.master))
+      this.laneIdOrder.push(id)
     }
   }
 
@@ -173,6 +221,7 @@ class AudioEngine {
     if (lane) {
       lane.dispose()
       this.lanes.delete(id)
+      this.laneIdOrder = this.laneIdOrder.filter(lid => lid !== id)
     }
   }
 
@@ -228,6 +277,17 @@ class AudioEngine {
       if (this.playing && lane.sourceType === 'tone' && lane.source) {
         lane.source.type = waveform
       }
+    }
+  }
+
+  // Set FM modulation index from lane at modulatorPosition (0-3) into carrier lane.
+  // value = Hz of frequency deviation at peak modulator amplitude.
+  setLaneFmIndex(carrierId, modulatorPosition, value) {
+    const carrier = this.lanes.get(carrierId)
+    const modulatorId = this.laneIdOrder[modulatorPosition]
+    const modulator = this.lanes.get(modulatorId)
+    if (carrier && modulator) {
+      carrier.setFmIndex(modulator, modulatorId, value)
     }
   }
 

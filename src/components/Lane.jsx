@@ -32,6 +32,7 @@ export function Lane({
   onNoiseTypeChange,
   onToneFrequencyChange,
   onToneWaveformChange,
+  onFmIndexChange,
   onVolumeChange,
   onResonanceChange,
   onBaseCutoffChange,
@@ -73,17 +74,17 @@ export function Lane({
       {/* Lane header row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 
-        {/* Lane label */}
+        {/* Lane label — FM1 … FM4 */}
         <span style={{
-          fontSize: '9px',
+          fontSize: '8px',
           color: 'var(--accent)',
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          minWidth: '16px',
+          letterSpacing: '0.05em',
+          minWidth: '28px',
           flexShrink: 0,
           fontFamily: "'Press Start 2P', monospace",
+          textShadow: '1px 1px 0 var(--accent-dim)',
         }}>
-          {laneIndex + 1}
+          FM{laneIndex + 1}
         </span>
 
         {/* ── Left cluster: source + sub-options + freq ── */}
@@ -121,9 +122,9 @@ export function Lane({
             </div>
           )}
 
-          {/* Waveform selector + Freq knob — only when tone */}
+          {/* Waveform selector + Freq + FM index knobs — only when tone */}
           {lane.sourceType === 'tone' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: '2px' }}>
                 {WAVEFORMS.map(w => (
                   <button
@@ -141,6 +142,18 @@ export function Lane({
                 decimals={0}
                 unit="hz"
               />
+              {/* FM index from each of the 4 lanes (pre-filter, unaffected by pings) */}
+              {lane.fmIndexes.map((val, i) => (
+                <Knob
+                  key={i}
+                  label={`FM${i + 1}`}
+                  min={0} max={500}
+                  value={val}
+                  onChange={v => onFmIndexChange(lane.id, i, v)}
+                  decimals={0}
+                  unit="hz"
+                />
+              ))}
             </div>
           )}
         </div>
