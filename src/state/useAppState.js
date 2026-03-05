@@ -4,19 +4,11 @@ import { engine } from '../audio/engine.js'
 
 const DEFAULT_LANE = () => ({
   id: uuidv4(),
-  sourceType: 'noise',    // 'noise' | 'tone' | 'sample'
-  noiseType: 'white',     // 'white' | 'pink' | 'brown'
-  toneFrequency: 110,     // Hz
-  toneWaveform: 'sine',   // sine | triangle | sawtooth | square
-  fmIndexes: [0, 0, 0, 0], // FM deviation (Hz) from each of the 4 lanes (pre-filter)
+  sourceType: 'noise',  // 'noise' | 'tone' | 'sample'
+  frequency: 220,       // Hz (tone pitch or noise bandpass center)
   sampleUrl: null,
   sampleBuffer: null,
   volume: 0.8,
-  filter: {
-    type: 'lowpass',      // 'lowpass' | 'highpass' | 'bandpass' | 'notch'
-    resonance: 1.0,
-    baseCutoff: 80,
-  },
   triggers: [],
 })
 
@@ -73,25 +65,11 @@ export function useAppState() {
     engine.setLaneSourceType(laneId, type)
   }, [])
 
-  const updateLaneNoiseType = useCallback((laneId, type) => {
+  const updateLaneFrequency = useCallback((laneId, hz) => {
     setLanes(prev => prev.map(l =>
-      l.id === laneId ? { ...l, noiseType: type } : l
+      l.id === laneId ? { ...l, frequency: hz } : l
     ))
-    engine.setLaneNoiseType(laneId, type)
-  }, [])
-
-  const updateLaneToneFrequency = useCallback((laneId, hz) => {
-    setLanes(prev => prev.map(l =>
-      l.id === laneId ? { ...l, toneFrequency: hz } : l
-    ))
-    engine.setLaneToneFrequency(laneId, hz)
-  }, [])
-
-  const updateLaneToneWaveform = useCallback((laneId, waveform) => {
-    setLanes(prev => prev.map(l =>
-      l.id === laneId ? { ...l, toneWaveform: waveform } : l
-    ))
-    engine.setLaneToneWaveform(laneId, waveform)
+    engine.setLaneFrequency(laneId, hz)
   }, [])
 
   const updateLaneVolume = useCallback((laneId, vol) => {
@@ -99,36 +77,6 @@ export function useAppState() {
       l.id === laneId ? { ...l, volume: vol } : l
     ))
     engine.setLaneVolume(laneId, vol)
-  }, [])
-
-  const updateLaneResonance = useCallback((laneId, q) => {
-    setLanes(prev => prev.map(l =>
-      l.id === laneId ? { ...l, filter: { ...l.filter, resonance: q } } : l
-    ))
-    engine.setLaneResonance(laneId, q)
-  }, [])
-
-  const updateLaneBaseCutoff = useCallback((laneId, hz) => {
-    setLanes(prev => prev.map(l =>
-      l.id === laneId ? { ...l, filter: { ...l.filter, baseCutoff: hz } } : l
-    ))
-    engine.setLaneBaseCutoff(laneId, hz)
-  }, [])
-
-  const updateLaneFilterType = useCallback((laneId, type) => {
-    setLanes(prev => prev.map(l =>
-      l.id === laneId ? { ...l, filter: { ...l.filter, type } } : l
-    ))
-    engine.setLaneFilterType(laneId, type)
-  }, [])
-
-  const updateLaneFmIndex = useCallback((carrierId, modulatorPosition, value) => {
-    setLanes(prev => prev.map(l =>
-      l.id === carrierId
-        ? { ...l, fmIndexes: l.fmIndexes.map((v, i) => i === modulatorPosition ? value : v) }
-        : l
-    ))
-    engine.setLaneFmIndex(carrierId, modulatorPosition, value)
   }, [])
 
   // Sync engine scheduling whenever lanes change while playing
@@ -197,14 +145,8 @@ export function useAppState() {
     lanes,
     updateLaneSample,
     updateLaneSourceType,
-    updateLaneNoiseType,
-    updateLaneToneFrequency,
-    updateLaneToneWaveform,
-    updateLaneFmIndex,
+    updateLaneFrequency,
     updateLaneVolume,
-    updateLaneResonance,
-    updateLaneBaseCutoff,
-    updateLaneFilterType,
     addTrigger,
     updateTrigger,
     cycleVelocity,
