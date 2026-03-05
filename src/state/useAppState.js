@@ -4,10 +4,12 @@ import { engine } from '../audio/engine.js'
 
 const DEFAULT_LANE = () => ({
   id: uuidv4(),
-  sourceType: 'noise',    // 'noise' | 'tone' | 'sample'
+  sourceType: 'noise',    // 'noise' | 'tone' | 'fm' | 'sample'
   noiseType: 'white',     // 'white' | 'pink' | 'brown'
-  toneFrequency: 110,     // Hz — used when sourceType === 'tone'
+  toneFrequency: 110,     // Hz — used when sourceType === 'tone' or 'fm'
   toneWaveform: 'sine',   // sine | triangle | sawtooth | square
+  fmHarmonicity: 3,       // modulator freq ratio (FM only)
+  fmModIndex: 5,          // modulation depth (FM only)
   sampleUrl: null,
   sampleBuffer: null,
   volume: 0.8,
@@ -121,6 +123,20 @@ export function useAppState() {
     engine.setLaneFilterType(laneId, type)
   }, [])
 
+  const updateLaneFmHarmonicity = useCallback((laneId, val) => {
+    setLanes(prev => prev.map(l =>
+      l.id === laneId ? { ...l, fmHarmonicity: val } : l
+    ))
+    engine.setLaneFmHarmonicity(laneId, val)
+  }, [])
+
+  const updateLaneFmModIndex = useCallback((laneId, val) => {
+    setLanes(prev => prev.map(l =>
+      l.id === laneId ? { ...l, fmModIndex: val } : l
+    ))
+    engine.setLaneFmModIndex(laneId, val)
+  }, [])
+
   // Sync engine scheduling whenever lanes change while playing
   useEffect(() => {
     engine.rescheduleTriggers(lanes)
@@ -190,6 +206,8 @@ export function useAppState() {
     updateLaneNoiseType,
     updateLaneToneFrequency,
     updateLaneToneWaveform,
+    updateLaneFmHarmonicity,
+    updateLaneFmModIndex,
     updateLaneVolume,
     updateLaneResonance,
     updateLaneBaseCutoff,

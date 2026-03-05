@@ -4,7 +4,8 @@
 
 :root {
   --hud-bg: #050508;           /* Near-black — HUD / NES screen */
-  --bg: #1a5c14;               /* Grass green — infield / between lanes */
+  --bg: #28b014;               /* Bright grass green — infield */
+  --bg-stripe: #22961000;      /* Mowed stripe (slightly darker) */
   --surface: #7A3210;          /* Tartan track brown — lane panels */
   --surface-alt: #9B4418;      /* Lighter track brown */
   --border: #ffffff;           /* White — lane markings */
@@ -20,13 +21,13 @@
 
 body {
   background-color: var(--bg);
-  /* Mowed-lawn alternating stripes like the game's grass */
+  /* Mowed-lawn alternating stripes — two green shades like real turf */
   background-image: repeating-linear-gradient(
     180deg,
-    rgba(255,255,255,0.04) 0px,
-    rgba(255,255,255,0.04) 8px,
-    transparent 8px,
-    transparent 16px
+    transparent 0px,
+    transparent 14px,
+    rgba(0, 40, 0, 0.18) 14px,
+    rgba(0, 40, 0, 0.18) 28px
   );
   color: var(--text);
   font-family: 'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;

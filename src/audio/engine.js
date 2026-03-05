@@ -39,10 +39,12 @@ class LaneAudio {
 
     this.source = null
     this.buffer = null
-    this.sourceType = 'noise'   // 'noise' | 'tone' | 'sample'
+    this.sourceType = 'noise'   // 'noise' | 'tone' | 'fm' | 'sample'
     this.noiseType = 'white'    // 'white' | 'pink' | 'brown'
     this.toneFrequency = 110    // Hz
     this.toneWaveform = 'sine'  // sine | triangle | sawtooth | square
+    this.fmHarmonicity = 3      // modulator frequency ratio
+    this.fmModIndex = 5         // modulation depth
   }
 
   setBuffer(audioBuffer) {
@@ -78,6 +80,16 @@ class LaneAudio {
       this.source.loopEnd = Math.min(this.buffer.duration, loopEnd)
       this.source.connect(this.gateGain)
       this.source.sync().start(0)
+    } else if (this.sourceType === 'fm') {
+      this.source = new Tone.FMOscillator({
+        frequency: this.toneFrequency,
+        type: this.toneWaveform,
+        modulationType: 'sine',
+        harmonicity: this.fmHarmonicity,
+        modulationIndex: this.fmModIndex,
+      })
+      this.source.connect(this.gateGain)
+      this.source.start()
     } else if (this.sourceType === 'tone') {
       this.source = new Tone.Oscillator(this.toneFrequency, this.toneWaveform)
       this.source.connect(this.gateGain)
@@ -225,8 +237,28 @@ class AudioEngine {
     const lane = this.lanes.get(id)
     if (lane) {
       lane.toneWaveform = waveform
-      if (this.playing && lane.sourceType === 'tone' && lane.source) {
+      if (this.playing && (lane.sourceType === 'tone' || lane.sourceType === 'fm') && lane.source) {
         lane.source.type = waveform
+      }
+    }
+  }
+
+  setLaneFmHarmonicity(id, val) {
+    const lane = this.lanes.get(id)
+    if (lane) {
+      lane.fmHarmonicity = val
+      if (this.playing && lane.sourceType === 'fm' && lane.source) {
+        lane.source.harmonicity.rampTo(val, 0.05)
+      }
+    }
+  }
+
+  setLaneFmModIndex(id, val) {
+    const lane = this.lanes.get(id)
+    if (lane) {
+      lane.fmModIndex = val
+      if (this.playing && lane.sourceType === 'fm' && lane.source) {
+        lane.source.modulationIndex.rampTo(val, 0.05)
       }
     }
   }

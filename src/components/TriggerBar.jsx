@@ -239,15 +239,21 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       style={{ display: 'block', cursor: 'crosshair', touchAction: 'none' }}
     >
       <defs>
-        {/* Grass stripe pattern */}
-        <pattern id={`grass-${laneId}`} x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-          <rect width="16" height="16" fill="#1a5c14" />
-          <rect width="8" height="16" fill="#1d6618" />
+        {/* Running track — tartan rubber surface texture */}
+        <pattern id={`track-${laneId}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="#B84018" />
+          <rect width="20" height="10" fill="#C84820" />
+          {/* Subtle granule dots for tartan texture */}
+          <circle cx="5"  cy="5"  r="1" fill="rgba(255,120,60,0.3)" />
+          <circle cx="15" cy="5"  r="1" fill="rgba(80,10,0,0.2)" />
+          <circle cx="10" cy="15" r="1" fill="rgba(255,120,60,0.3)" />
+          <circle cx="0"  cy="15" r="1" fill="rgba(80,10,0,0.2)" />
+          <circle cx="20" cy="15" r="1" fill="rgba(80,10,0,0.2)" />
         </pattern>
       </defs>
 
-      {/* Grass background */}
-      <rect width="100%" height={BAR_HEIGHT} fill={`url(#grass-${laneId})`} />
+      {/* Track surface background */}
+      <rect width="100%" height={BAR_HEIGHT} fill={`url(#track-${laneId})`} />
 
       {/* Lane lines (white stripes like track markings) */}
       <rect x="0" y="0" width="100%" height="3" fill="rgba(255,255,255,0.7)" />
