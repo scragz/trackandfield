@@ -33,7 +33,7 @@ export default function App() {
   }, [addTrigger])
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
 
       {/* ── Header / HUD ── */}
       <header style={{
@@ -114,26 +114,6 @@ export default function App() {
           </button>
         </div>
       </header>
-
-      {/* Instructions */}
-      <div style={{
-        padding: '5px 16px',
-        fontSize: '9px',
-        color: 'var(--text-dim)',
-        letterSpacing: '0.05em',
-        borderBottom: '2px solid rgba(255,255,255,0.2)',
-        background: 'rgba(0,0,0,0.25)',
-        display: 'flex',
-        gap: '16px',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-      }}>
-        <span>tap bar → place trigger</span>
-        <span>drag ↑↓ → swell / snappy</span>
-        <span>drag ←→ → reposition</span>
-        <span>tap trigger → cycle velocity ●◦·</span>
-        <span>right-click / long-press → delete</span>
-      </div>
 
       {/* Lanes */}
       <main style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
