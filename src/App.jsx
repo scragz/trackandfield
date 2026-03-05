@@ -20,8 +20,7 @@ export default function App() {
     updateLaneResonance,
     updateLaneBaseCutoff,
     updateLaneFilterType,
-    updateLaneFmHarmonicity,
-    updateLaneFmModIndex,
+    updateLaneFmIndex,
     addTrigger,
     updateTrigger,
     cycleVelocity,
@@ -167,8 +166,7 @@ export default function App() {
             onNoiseTypeChange={updateLaneNoiseType}
             onToneFrequencyChange={updateLaneToneFrequency}
             onToneWaveformChange={updateLaneToneWaveform}
-            onFmHarmonicityChange={updateLaneFmHarmonicity}
-            onFmModIndexChange={updateLaneFmModIndex}
+            onFmIndexChange={updateLaneFmIndex}
             onVolumeChange={updateLaneVolume}
             onResonanceChange={updateLaneResonance}
             onBaseCutoffChange={updateLaneBaseCutoff}

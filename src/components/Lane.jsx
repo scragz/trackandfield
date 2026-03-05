@@ -32,8 +32,7 @@ export function Lane({
   onNoiseTypeChange,
   onToneFrequencyChange,
   onToneWaveformChange,
-  onFmHarmonicityChange,
-  onFmModIndexChange,
+  onFmIndexChange,
   onVolumeChange,
   onResonanceChange,
   onBaseCutoffChange,
@@ -103,11 +102,6 @@ export function Lane({
               title="Oscillator"
             >tone</button>
             <button
-              className={`source-pill ${lane.sourceType === 'fm' ? 'active' : ''}`}
-              onClick={() => onSourceTypeChange(lane.id, 'fm')}
-              title="FM synthesis — carrier modulated by a sine operator"
-            >fm</button>
-            <button
               className={`source-pill ${lane.sourceType === 'sample' ? 'active' : ''}`}
               onClick={() => fileRef.current?.click()}
               title={sampleName ? 'Click to replace sample' : 'Upload a sample'}
@@ -128,31 +122,8 @@ export function Lane({
             </div>
           )}
 
-          {/* Waveform selector + Freq knob — only when tone */}
+          {/* Waveform selector + Freq + FM index knobs — only when tone */}
           {lane.sourceType === 'tone' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-              <div style={{ display: 'flex', gap: '2px' }}>
-                {WAVEFORMS.map(w => (
-                  <button
-                    key={w.id}
-                    className={`source-pill ${lane.toneWaveform === w.id ? 'active' : ''}`}
-                    onClick={() => onToneWaveformChange(lane.id, w.id)}
-                  >{w.label}</button>
-                ))}
-              </div>
-              <Knob
-                label="Freq"
-                min={20} max={2000}
-                value={lane.toneFrequency}
-                onChange={v => onToneFrequencyChange(lane.id, v)}
-                decimals={0}
-                unit="hz"
-              />
-            </div>
-          )}
-
-          {/* FM controls — carrier waveform, freq, harmonicity, mod index */}
-          {lane.sourceType === 'fm' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: '2px' }}>
                 {WAVEFORMS.map(w => (
@@ -160,7 +131,6 @@ export function Lane({
                     key={w.id}
                     className={`source-pill ${lane.toneWaveform === w.id ? 'active' : ''}`}
                     onClick={() => onToneWaveformChange(lane.id, w.id)}
-                    title={`Carrier waveform: ${w.id}`}
                   >{w.label}</button>
                 ))}
               </div>
@@ -172,20 +142,18 @@ export function Lane({
                 decimals={0}
                 unit="hz"
               />
-              <Knob
-                label="Harm"
-                min={0.5} max={16}
-                value={lane.fmHarmonicity}
-                onChange={v => onFmHarmonicityChange(lane.id, v)}
-                decimals={1}
-              />
-              <Knob
-                label="Mod"
-                min={0} max={10}
-                value={lane.fmModIndex}
-                onChange={v => onFmModIndexChange(lane.id, v)}
-                decimals={1}
-              />
+              {/* FM index from each of the 4 lanes (pre-filter, unaffected by pings) */}
+              {lane.fmIndexes.map((val, i) => (
+                <Knob
+                  key={i}
+                  label={`FM${i + 1}`}
+                  min={0} max={500}
+                  value={val}
+                  onChange={v => onFmIndexChange(lane.id, i, v)}
+                  decimals={0}
+                  unit="hz"
+                />
+              ))}
             </div>
           )}
         </div>
