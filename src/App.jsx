@@ -148,7 +148,6 @@ export default function App() {
           <Lane
             key={lane.id}
             lane={lane}
-            laneIndex={i}
             playheadPosition={playheadPosition}
             onSampleUpload={updateLaneSample}
             onSourceTypeChange={updateLaneSourceType}
