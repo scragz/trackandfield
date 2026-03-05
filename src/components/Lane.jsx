@@ -3,39 +3,13 @@ import { getContext } from 'tone'
 import { Knob } from './Knob.jsx'
 import { TriggerBar } from './TriggerBar.jsx'
 
-const WAVEFORMS = [
-  { id: 'sine',     label: 'sin' },
-  { id: 'triangle', label: 'tri' },
-  { id: 'sawtooth', label: 'saw' },
-  { id: 'square',   label: 'sqr' },
-]
-
-const NOISE_TYPES = [
-  { id: 'white', label: 'wht' },
-  { id: 'pink',  label: 'pnk' },
-  { id: 'brown', label: 'brn' },
-]
-
-const FILTER_TYPES = [
-  { id: 'lowpass',  label: 'LP',   title: 'Low-pass — lets lows through, sweeps up' },
-  { id: 'highpass', label: 'HP',   title: 'High-pass — lets highs through, sweeps down' },
-  { id: 'bandpass', label: 'BP',   title: 'Band-pass — narrow peak around cutoff' },
-  { id: 'notch',    label: 'NT',   title: 'Notch — cuts a hole at the cutoff frequency' },
-]
-
 export function Lane({
   lane,
   playheadPosition,
   onSampleUpload,
   onSourceTypeChange,
-  onNoiseTypeChange,
-  onToneFrequencyChange,
-  onToneWaveformChange,
-  onFmIndexChange,
+  onFrequencyChange,
   onVolumeChange,
-  onResonanceChange,
-  onBaseCutoffChange,
-  onFilterTypeChange,
   onAddTrigger,
   onUpdateTrigger,
   onDeleteTrigger,
@@ -58,7 +32,7 @@ export function Lane({
     ? lane.sampleUrl.split('/').pop()?.substring(0, 14) || 'sample'
     : null
 
-  const filterType = lane.filter?.type ?? 'lowpass'
+  const hasFreq = lane.sourceType === 'tone' || lane.sourceType === 'noise'
 
   return (
     <div style={{
@@ -71,23 +45,23 @@ export function Lane({
       gap: '6px',
     }}>
 
-      {/* Two-column layout */}
-      <div style={{ display: 'flex', gap: '16px' }}>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
 
-        {/* Left half: source, source options, knobs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: 0 }}>
+        {/* Source section */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <span style={{ fontSize: '7px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>SOUNDS</span>
 
-          {/* Row 1: source type */}
+          {/* Source type selector */}
           <div style={{ display: 'flex', gap: '2px' }}>
             <button
               className={`source-pill ${lane.sourceType === 'noise' ? 'active' : ''}`}
               onClick={() => onSourceTypeChange(lane.id, 'noise')}
-              title="Noise through the filter"
+              title="White noise through bandpass + LPG"
             >noise</button>
             <button
               className={`source-pill ${lane.sourceType === 'tone' ? 'active' : ''}`}
               onClick={() => onSourceTypeChange(lane.id, 'tone')}
-              title="Oscillator"
+              title="Square oscillator through LPG"
             >tone</button>
             <button
               className={`source-pill ${lane.sourceType === 'sample' ? 'active' : ''}`}
@@ -95,97 +69,27 @@ export function Lane({
               title={sampleName ? 'Click to replace sample' : 'Upload a sample'}
             >{sampleName || '↑ smp'}</button>
           </div>
-
-          {/* Row 2: source options */}
-          <div style={{ display: 'flex', gap: '2px' }}>
-            {lane.sourceType === 'noise' && NOISE_TYPES.map(n => (
-              <button
-                key={n.id}
-                className={`source-pill ${lane.noiseType === n.id ? 'active' : ''}`}
-                onClick={() => onNoiseTypeChange(lane.id, n.id)}
-                title={`${n.id} noise`}
-              >{n.label}</button>
-            ))}
-            {lane.sourceType === 'tone' && WAVEFORMS.map(w => (
-              <button
-                key={w.id}
-                className={`source-pill ${lane.toneWaveform === w.id ? 'active' : ''}`}
-                onClick={() => onToneWaveformChange(lane.id, w.id)}
-              >{w.label}</button>
-            ))}
-          </div>
-
-          {/* Row 3: knobs */}
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
-            <Knob
-              label="Vol"
-              min={0} max={1}
-              value={lane.volume}
-              onChange={v => onVolumeChange(lane.id, v)}
-              decimals={2}
-            />
-            {lane.sourceType === 'tone' && (
-              <>
-                <Knob
-                  label="Freq"
-                  min={20} max={2000}
-                  value={lane.toneFrequency}
-                  onChange={v => onToneFrequencyChange(lane.id, v)}
-                  decimals={0}
-                  unit="hz"
-                />
-                {lane.fmIndexes.map((val, i) => (
-                  <Knob
-                    key={i}
-                    label={`FM${i + 1}`}
-                    min={0} max={500}
-                    value={val}
-                    onChange={v => onFmIndexChange(lane.id, i, v)}
-                    decimals={0}
-                    unit="hz"
-                  />
-                ))}
-              </>
-            )}
-          </div>
         </div>
 
-        {/* Right half: filter type + filter knobs */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
-
-          {/* Filter type selector */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '7px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>FILTER</span>
-            <div style={{ display: 'flex', gap: '2px' }}>
-              {FILTER_TYPES.map(f => (
-                <button
-                  key={f.id}
-                  className={`source-pill ${filterType === f.id ? 'active' : ''}`}
-                  onClick={() => onFilterTypeChange(lane.id, f.id)}
-                  title={f.title}
-                >{f.label}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* Filter knobs: Q, Cutoff */}
-          <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-end' }}>
+        {/* Knobs */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+          <Knob
+            label="Vol"
+            min={0} max={1}
+            value={lane.volume}
+            onChange={v => onVolumeChange(lane.id, v)}
+            decimals={2}
+          />
+          {hasFreq && (
             <Knob
-              label="Q"
-              min={0.1} max={20}
-              value={lane.filter.resonance}
-              onChange={v => onResonanceChange(lane.id, v)}
-              decimals={1}
-            />
-            <Knob
-              label="Cutoff"
-              min={40} max={2000}
-              value={lane.filter.baseCutoff}
-              onChange={v => onBaseCutoffChange(lane.id, v)}
+              label="Freq"
+              min={20} max={2000}
+              value={lane.frequency}
+              onChange={v => onFrequencyChange(lane.id, v)}
               decimals={0}
               unit="hz"
             />
-          </div>
+          )}
         </div>
       </div>
 

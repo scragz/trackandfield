@@ -13,14 +13,8 @@ export default function App() {
     lanes,
     updateLaneSample,
     updateLaneSourceType,
-    updateLaneNoiseType,
-    updateLaneToneFrequency,
-    updateLaneToneWaveform,
+    updateLaneFrequency,
     updateLaneVolume,
-    updateLaneResonance,
-    updateLaneBaseCutoff,
-    updateLaneFilterType,
-    updateLaneFmIndex,
     addTrigger,
     updateTrigger,
     cycleVelocity,
@@ -139,26 +133,19 @@ export default function App() {
         <span>drag ←→ → reposition</span>
         <span>tap trigger → cycle velocity ●◦·</span>
         <span>right-click / long-press → delete</span>
-        <span style={{ marginLeft: 'auto', opacity: 0.6 }}>filter sweeps on trigger</span>
       </div>
 
       {/* Lanes */}
       <main style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-        {lanes.map((lane, i) => (
+        {lanes.map((lane) => (
           <Lane
             key={lane.id}
             lane={lane}
             playheadPosition={playheadPosition}
             onSampleUpload={updateLaneSample}
             onSourceTypeChange={updateLaneSourceType}
-            onNoiseTypeChange={updateLaneNoiseType}
-            onToneFrequencyChange={updateLaneToneFrequency}
-            onToneWaveformChange={updateLaneToneWaveform}
-            onFmIndexChange={updateLaneFmIndex}
+            onFrequencyChange={updateLaneFrequency}
             onVolumeChange={updateLaneVolume}
-            onResonanceChange={updateLaneResonance}
-            onBaseCutoffChange={updateLaneBaseCutoff}
-            onFilterTypeChange={updateLaneFilterType}
             onAddTrigger={handleAddTrigger}
             onUpdateTrigger={updateTrigger}
             onDeleteTrigger={deleteTrigger}
@@ -182,4 +169,3 @@ export default function App() {
     </div>
   )
 }
-
