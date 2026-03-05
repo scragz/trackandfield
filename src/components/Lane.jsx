@@ -71,10 +71,11 @@ export function Lane({
       flexDirection: 'column',
       gap: '6px',
     }}>
-      {/* Lane header row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
 
-        {/* Lane label — FM1 … FM4 */}
+      {/* Row 1: label + source + sub-options / tone params */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+        {/* Lane label */}
         <span style={{
           fontSize: '8px',
           color: 'var(--accent)',
@@ -87,53 +88,52 @@ export function Lane({
           FM{laneIndex + 1}
         </span>
 
-        {/* ── Left cluster: source + sub-options + freq ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap', flex: 1 }}>
-          {/* Source type selector */}
-          <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
-            <button
-              className={`source-pill ${lane.sourceType === 'noise' ? 'active' : ''}`}
-              onClick={() => onSourceTypeChange(lane.id, 'noise')}
-              title="Noise through the filter"
-            >noise</button>
-            <button
-              className={`source-pill ${lane.sourceType === 'tone' ? 'active' : ''}`}
-              onClick={() => onSourceTypeChange(lane.id, 'tone')}
-              title="Oscillator"
-            >tone</button>
-            <button
-              className={`source-pill ${lane.sourceType === 'sample' ? 'active' : ''}`}
-              onClick={() => fileRef.current?.click()}
-              title={sampleName ? 'Click to replace sample' : 'Upload a sample'}
-            >{sampleName || '↑ smp'}</button>
-          </div>
+        {/* Source type selector */}
+        <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+          <button
+            className={`source-pill ${lane.sourceType === 'noise' ? 'active' : ''}`}
+            onClick={() => onSourceTypeChange(lane.id, 'noise')}
+            title="Noise through the filter"
+          >noise</button>
+          <button
+            className={`source-pill ${lane.sourceType === 'tone' ? 'active' : ''}`}
+            onClick={() => onSourceTypeChange(lane.id, 'tone')}
+            title="Oscillator"
+          >tone</button>
+          <button
+            className={`source-pill ${lane.sourceType === 'sample' ? 'active' : ''}`}
+            onClick={() => fileRef.current?.click()}
+            title={sampleName ? 'Click to replace sample' : 'Upload a sample'}
+          >{sampleName || '↑ smp'}</button>
+        </div>
 
-          {/* Noise type selector */}
-          {lane.sourceType === 'noise' && (
+        {/* Noise type selector */}
+        {lane.sourceType === 'noise' && (
+          <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
+            {NOISE_TYPES.map(n => (
+              <button
+                key={n.id}
+                className={`source-pill ${lane.noiseType === n.id ? 'active' : ''}`}
+                onClick={() => onNoiseTypeChange(lane.id, n.id)}
+                title={`${n.id} noise`}
+              >{n.label}</button>
+            ))}
+          </div>
+        )}
+
+        {/* Tone: waveform + Freq + FM index knobs */}
+        {lane.sourceType === 'tone' && (
+          <>
             <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
-              {NOISE_TYPES.map(n => (
+              {WAVEFORMS.map(w => (
                 <button
-                  key={n.id}
-                  className={`source-pill ${lane.noiseType === n.id ? 'active' : ''}`}
-                  onClick={() => onNoiseTypeChange(lane.id, n.id)}
-                  title={`${n.id} noise`}
-                >{n.label}</button>
+                  key={w.id}
+                  className={`source-pill ${lane.toneWaveform === w.id ? 'active' : ''}`}
+                  onClick={() => onToneWaveformChange(lane.id, w.id)}
+                >{w.label}</button>
               ))}
             </div>
-          )}
-
-          {/* Waveform selector + Freq + FM index knobs — only when tone */}
-          {lane.sourceType === 'tone' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: '2px' }}>
-                {WAVEFORMS.map(w => (
-                  <button
-                    key={w.id}
-                    className={`source-pill ${lane.toneWaveform === w.id ? 'active' : ''}`}
-                    onClick={() => onToneWaveformChange(lane.id, w.id)}
-                  >{w.label}</button>
-                ))}
-              </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
               <Knob
                 label="Freq"
                 min={20} max={2000}
@@ -142,7 +142,6 @@ export function Lane({
                 decimals={0}
                 unit="hz"
               />
-              {/* FM index from each of the 4 lanes (pre-filter, unaffected by pings) */}
               {lane.fmIndexes.map((val, i) => (
                 <Knob
                   key={i}
@@ -155,60 +154,56 @@ export function Lane({
                 />
               ))}
             </div>
-          )}
-        </div>
+          </>
+        )}
+      </div>
 
-        {/* ── Right cluster: filter type + Vol / Q / Cutoff ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-          {/* Filter type selector */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '7px', color: 'var(--text-dim)', letterSpacing: '0.1em', textAlign: 'center' }}>FILTER</span>
-            <div style={{ display: 'flex', gap: '2px' }}>
-              {FILTER_TYPES.map(f => (
-                <button
-                  key={f.id}
-                  className={`source-pill ${filterType === f.id ? 'active' : ''}`}
-                  onClick={() => onFilterTypeChange(lane.id, f.id)}
-                  title={f.title}
-                >{f.label}</button>
-              ))}
-            </div>
-          </div>
+      {/* Row 2: filter type + Vol / Q / Cutoff */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
 
-          {/* Knobs: Vol, Q, Cutoff */}
-          <div style={{ display: 'flex', gap: '14px' }}>
-            <Knob
-              label="Vol"
-              min={0} max={1}
-              value={lane.volume}
-              onChange={v => onVolumeChange(lane.id, v)}
-              decimals={2}
-            />
-            <Knob
-              label="Q"
-              min={0.1} max={20}
-              value={lane.filter.resonance}
-              onChange={v => onResonanceChange(lane.id, v)}
-              decimals={1}
-            />
-            <Knob
-              label="Cutoff"
-              min={40} max={2000}
-              value={lane.filter.baseCutoff}
-              onChange={v => onBaseCutoffChange(lane.id, v)}
-              decimals={0}
-              unit="hz"
-            />
+        {/* Spacer pushes filter to align under source buttons */}
+        <div style={{ minWidth: '28px', flexShrink: 0 }} />
+
+        {/* Filter type selector */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+          <span style={{ fontSize: '7px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>FILTER</span>
+          <div style={{ display: 'flex', gap: '2px' }}>
+            {FILTER_TYPES.map(f => (
+              <button
+                key={f.id}
+                className={`source-pill ${filterType === f.id ? 'active' : ''}`}
+                onClick={() => onFilterTypeChange(lane.id, f.id)}
+                title={f.title}
+              >{f.label}</button>
+            ))}
           </div>
         </div>
 
-        <input
-          ref={fileRef}
-          type="file"
-          accept="audio/*"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-        />
+        {/* Knobs: Vol, Q, Cutoff */}
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-end' }}>
+          <Knob
+            label="Vol"
+            min={0} max={1}
+            value={lane.volume}
+            onChange={v => onVolumeChange(lane.id, v)}
+            decimals={2}
+          />
+          <Knob
+            label="Q"
+            min={0.1} max={20}
+            value={lane.filter.resonance}
+            onChange={v => onResonanceChange(lane.id, v)}
+            decimals={1}
+          />
+          <Knob
+            label="Cutoff"
+            min={40} max={2000}
+            value={lane.filter.baseCutoff}
+            onChange={v => onBaseCutoffChange(lane.id, v)}
+            decimals={0}
+            unit="hz"
+          />
+        </div>
       </div>
 
       {/* Trigger bar */}
@@ -220,6 +215,14 @@ export function Lane({
         onUpdate={onUpdateTrigger}
         onDelete={onDeleteTrigger}
         onCycleVelocity={onCycleVelocity}
+      />
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="audio/*"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
       />
     </div>
   )
