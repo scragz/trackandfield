@@ -60,36 +60,25 @@ export default function App() {
           {/* T&F Logo */}
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0', flexShrink: 0, lineHeight: 1 }}>
             <span style={{
-              fontSize: '38px',
+              fontSize: '16px',
               fontFamily: "'Press Start 2P', monospace",
-              color: '#EE1111',
-              textShadow: '4px 4px 0 #770000',
-              display: 'inline-block',
-              transform: 'scaleX(0.8)',
-              transformOrigin: 'left',
-            }}>T</span>
-            <span style={{
-              fontSize: '13px',
-              fontFamily: "'Press Start 2P', monospace",
-              color: '#FFE566',
-              textShadow: '2px 2px 0 #880000',
+              color: '#EE4444',
+              textShadow: '2px 2px 0 #770000',
               letterSpacing: '-0.02em',
-              marginBottom: '2px',
-            }}>RACK</span>
+            }}>TRACK</span>
             <span style={{
-              fontSize: '24px',
+              fontSize: '16px',
               fontFamily: "'Press Start 2P', monospace",
               color: '#FFE566',
               textShadow: '2px 2px 0 #880000',
-              margin: '0 5px',
+              margin: '0 6px',
             }}>&amp;</span>
             <span style={{
-              fontSize: '13px',
+              fontSize: '16px',
               fontFamily: "'Press Start 2P', monospace",
-              color: '#FFE566',
-              textShadow: '2px 2px 0 #880000',
+              color: '#EE4444',
+              textShadow: '2px 2px 0 #770000',
               letterSpacing: '-0.02em',
-              marginBottom: '2px',
             }}>FIELD</span>
           </div>
 
@@ -100,7 +89,7 @@ export default function App() {
             </span>
             <Knob
               label=""
-              min={60} max={180}
+              min={60} max={300}
               value={bpm}
               onChange={setBpm}
               decimals={0}
