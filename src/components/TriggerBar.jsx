@@ -1,14 +1,16 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
 
 const BAR_HEIGHT = 80
-const TRIGGER_RADIUS = 6
-const STEM_MAX = 30  // max stem px from center
-const DRAG_THRESHOLD = 4 // px before we decide horizontal vs vertical
+const DRAG_THRESHOLD = 4
+const STEM_MAX = 30
+
+// Velocity → circle radius
+const VELOCITY_RADIUS = { high: 8, med: 5.5, low: 3.5 }
+// Velocity → touch hit bonus (smaller targets need bigger hit area)
+const VELOCITY_HIT = { high: 4, med: 6, low: 8 }
 
 function triggerColor(direction) {
-  // interpolate between swell (gold) and ping (white)
   const t = (direction + 1) / 2
-  // ping: #ffffff (white), swell: #FFE566 (gold)
   const r = Math.round(lerp(0xFF, 0xFF, t))
   const g = Math.round(lerp(0xE5, 0xFF, t))
   const b = Math.round(lerp(0x66, 0xFF, t))
@@ -17,24 +19,20 @@ function triggerColor(direction) {
 
 function lerp(a, b, t) { return a + (b - a) * t }
 
-export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate, onDelete }) {
+export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate, onDelete, onCycleVelocity }) {
   const svgRef = useRef(null)
-  // Tracking which triggers are recently fired for glow effect
   const [firedIds, setFiredIds] = useState(new Set())
   const prevPlayhead = useRef(playheadPosition)
 
-  // Detect triggers firing as playhead passes them
   useEffect(() => {
     const prev = prevPlayhead.current
     const curr = playheadPosition
 
     const fired = new Set()
     triggers.forEach(t => {
-      // Handle loop wraparound
       if (prev <= curr) {
         if (t.position >= prev && t.position < curr) fired.add(t.id)
       } else {
-        // wrapped
         if (t.position >= prev || t.position < curr) fired.add(t.id)
       }
     })
@@ -54,40 +52,38 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
     return (clientX - rect.left) / rect.width
   }, [])
 
-  const getTriggerAt = useCallback((clientX, clientY, hitRadius = TRIGGER_RADIUS + 4) => {
+  const getTriggerAt = useCallback((clientX, clientY, extraHit = 4) => {
     const rect = svgRef.current?.getBoundingClientRect()
     if (!rect) return null
     const x = clientX - rect.left
     const y = clientY - rect.top
-    const cx = BAR_HEIGHT / 2 // center y
+    const cy = BAR_HEIGHT / 2
 
     for (let i = triggers.length - 1; i >= 0; i--) {
       const t = triggers[i]
       const tx = t.position * rect.width
-      const dist = Math.sqrt((x - tx) ** 2 + (y - cx) ** 2)
-      if (dist <= hitRadius) return t
+      const r = VELOCITY_RADIUS[t.velocity ?? 'high']
+      const hitR = r + extraHit + (VELOCITY_HIT[t.velocity ?? 'high'] ?? 4)
+      const dist = Math.sqrt((x - tx) ** 2 + (y - cy) ** 2)
+      if (dist <= hitR) return t
     }
     return null
   }, [triggers])
 
   const handleMouseDown = useCallback((e) => {
-    if (e.button === 2) return // right-click handled separately
+    if (e.button === 2) return
     e.preventDefault()
 
     const target = getTriggerAt(e.clientX, e.clientY)
 
     if (!target) {
-      // Place new trigger
       const pos = Math.max(0, Math.min(1, getSvgX(e.clientX)))
       const newId = onAdd(laneId, pos)
 
-      // Immediately start direction drag
       const startY = e.clientY
-      const startDir = 0
-
       const onMove = (me) => {
         const dy = startY - me.clientY
-        const direction = Math.max(-1, Math.min(1, startDir + dy / STEM_MAX))
+        const direction = Math.max(-1, Math.min(1, dy / STEM_MAX))
         onUpdate(laneId, newId, { direction })
       }
       const onUp = () => {
@@ -99,12 +95,13 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       return
     }
 
-    // Existing trigger — determine move vs direction drag
+    // Existing trigger — move, direction-drag, or tap-to-cycle-velocity
     const startX = e.clientX
     const startY = e.clientY
     const startPos = target.position
     const startDir = target.direction
-    let mode = null // 'move' | 'direction'
+    let mode = null
+    let dragged = false
     const rect = svgRef.current?.getBoundingClientRect()
 
     const onMove = (me) => {
@@ -113,14 +110,14 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
 
       if (!mode) {
         if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+          dragged = true
           mode = Math.abs(dx) > Math.abs(dy) ? 'move' : 'direction'
         }
         return
       }
 
       if (mode === 'move') {
-        const deltaPos = dx / (rect?.width || 1)
-        const pos = Math.max(0, Math.min(1, startPos + deltaPos))
+        const pos = Math.max(0, Math.min(1, startPos + dx / (rect?.width || 1)))
         onUpdate(laneId, target.id, { position: pos })
       } else {
         const direction = Math.max(-1, Math.min(1, startDir - dy / STEM_MAX))
@@ -131,11 +128,15 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      // No drag = tap → cycle velocity
+      if (!dragged) {
+        onCycleVelocity?.(laneId, target.id)
+      }
     }
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [getTriggerAt, getSvgX, laneId, onAdd, onUpdate])
+  }, [getTriggerAt, getSvgX, laneId, onAdd, onUpdate, onCycleVelocity])
 
   const handleContextMenu = useCallback((e) => {
     e.preventDefault()
@@ -147,16 +148,13 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
     e.preventDefault()
     if (e.touches.length !== 1) return
     const touch = e.touches[0]
-    // Use a larger hit radius for touch
-    const target = getTriggerAt(touch.clientX, touch.clientY, TRIGGER_RADIUS + 12)
+    const target = getTriggerAt(touch.clientX, touch.clientY, 12)
 
     if (!target) {
-      // Tap empty area → place new trigger, then drag to set direction
       const pos = Math.max(0, Math.min(1, getSvgX(touch.clientX)))
       const newId = onAdd(laneId, pos)
 
       const startY = touch.clientY
-
       const onMove = (te) => {
         if (te.touches.length !== 1) return
         const t = te.touches[0]
@@ -164,23 +162,21 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
         const direction = Math.max(-1, Math.min(1, dy / STEM_MAX))
         onUpdate(laneId, newId, { direction })
       }
-
       const onEnd = () => {
         window.removeEventListener('touchmove', onMove)
         window.removeEventListener('touchend', onEnd)
       }
-
       window.addEventListener('touchmove', onMove, { passive: false })
       window.addEventListener('touchend', onEnd)
       return
     }
 
-    // Existing trigger — long press (500ms) to delete, drag to move/adjust direction
     const startX = touch.clientX
     const startY = touch.clientY
     const startPos = target.position
     const startDir = target.direction
-    let mode = null // 'move' | 'direction'
+    let mode = null
+    let dragged = false
     let deleted = false
     const rect = svgRef.current?.getBoundingClientRect()
 
@@ -200,14 +196,14 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       if (!mode) {
         if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
           clearTimeout(longPressTimer)
+          dragged = true
           mode = Math.abs(dx) > Math.abs(dy) ? 'move' : 'direction'
         }
         return
       }
 
       if (mode === 'move') {
-        const deltaPos = dx / (rect?.width || 1)
-        const pos = Math.max(0, Math.min(1, startPos + deltaPos))
+        const pos = Math.max(0, Math.min(1, startPos + dx / (rect?.width || 1)))
         onUpdate(laneId, target.id, { position: pos })
       } else {
         const direction = Math.max(-1, Math.min(1, startDir - dy / STEM_MAX))
@@ -219,11 +215,14 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       clearTimeout(longPressTimer)
       window.removeEventListener('touchmove', onMove)
       window.removeEventListener('touchend', onEnd)
+      if (!dragged && !deleted) {
+        onCycleVelocity?.(laneId, target.id)
+      }
     }
 
     window.addEventListener('touchmove', onMove, { passive: false })
     window.addEventListener('touchend', onEnd)
-  }, [getTriggerAt, getSvgX, laneId, onAdd, onUpdate, onDelete])
+  }, [getTriggerAt, getSvgX, laneId, onAdd, onUpdate, onDelete, onCycleVelocity])
 
   const cy = BAR_HEIGHT / 2
   const playX = `${playheadPosition * 100}%`
@@ -239,11 +238,23 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
       onTouchStart={handleTouchStart}
       style={{ display: 'block', cursor: 'crosshair', touchAction: 'none' }}
     >
+      <defs>
+        {/* Grass stripe pattern */}
+        <pattern id={`grass-${laneId}`} x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+          <rect width="16" height="16" fill="#1a5c14" />
+          <rect width="8" height="16" fill="#1d6618" />
+        </pattern>
+      </defs>
+
+      {/* Grass background */}
+      <rect width="100%" height={BAR_HEIGHT} fill={`url(#grass-${laneId})`} />
+
+      {/* Lane lines (white stripes like track markings) */}
+      <rect x="0" y="0" width="100%" height="3" fill="rgba(255,255,255,0.7)" />
+      <rect x="0" y={BAR_HEIGHT - 3} width="100%" height="3" fill="rgba(255,255,255,0.7)" />
+
       {/* Center line */}
-      <line
-        x1="0" y1={cy} x2="100%" y2={cy}
-        stroke="var(--border)" strokeWidth="1"
-      />
+      <line x1="0" y1={cy} x2="100%" y2={cy} stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="4,8" />
 
       {/* Grid lines at 25%, 50%, 75% */}
       {[0.25, 0.5, 0.75].map(p => (
@@ -251,8 +262,7 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
           key={p}
           x1={`${p * 100}%`} y1="0"
           x2={`${p * 100}%`} y2={BAR_HEIGHT}
-          stroke="var(--border)" strokeWidth="0.5" strokeDasharray="2,4"
-          opacity="0.5"
+          stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" strokeDasharray="2,4"
         />
       ))}
 
@@ -263,11 +273,11 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
         const stemY1 = t.direction > 0 ? cy - stemLen : cy
         const stemY2 = t.direction > 0 ? cy : cy + stemLen
         const isFired = firedIds.has(t.id)
-        const glowR = isFired ? 12 : 0
+        const r = VELOCITY_RADIUS[t.velocity ?? 'high']
+        const glowR = isFired ? r + 6 : 0
 
         return (
           <g key={t.id} data-id={t.id}>
-            {/* Glow on fire */}
             {isFired && (
               <circle
                 cx={`${t.position * 100}%`} cy={cy}
@@ -276,7 +286,6 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
                 opacity="0.3"
               />
             )}
-            {/* Stem */}
             {stemLen > 0.5 && (
               <line
                 x1={`${t.position * 100}%`} y1={stemY1}
@@ -285,18 +294,16 @@ export function TriggerBar({ laneId, triggers, playheadPosition, onAdd, onUpdate
                 opacity={isFired ? 1 : 0.8}
               />
             )}
-            {/* Dot */}
             <circle
               cx={`${t.position * 100}%`} cy={cy}
-              r={TRIGGER_RADIUS}
+              r={r}
               fill={color}
-              opacity={isFired ? 1 : 0.85}
+              opacity={isFired ? 1 : 0.9}
               style={{ filter: isFired ? `drop-shadow(0 0 4px ${color})` : 'none' }}
             />
-            {/* Direction indicator tick */}
             <circle
               cx={`${t.position * 100}%`} cy={cy}
-              r={TRIGGER_RADIUS - 2}
+              r={r - 2}
               fill="none"
               stroke="rgba(0,0,0,0.4)"
               strokeWidth="1"

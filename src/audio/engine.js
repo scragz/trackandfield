@@ -1,13 +1,18 @@
 import * as Tone from 'tone'
 
-// Derive trigger envelope params from direction (-1 swell → +1 ping)
+// Derive trigger envelope params from direction (-1 snappy → 0 neutral/ping → +1 swell)
+// Neutral (direction=0) is an LPG-style ping: fast attack, short-ish decay.
+// Up (+1) builds into a long swell. Down (-1) is super snappy.
 export function getTriggerShape(direction) {
-  // direction: -1.0 (swell) to +1.0 (ping)
-  const t = (direction + 1) / 2 // 0.0 to 1.0
+  const t = (direction + 1) / 2 // 0.0 (snappy) → 1.0 (swell)
 
-  const attack = lerp(0.6, 0.01, t)       // swell=600ms, ping=10ms
-  const decay  = lerp(0.8, 0.08, t)       // swell=800ms, ping=80ms
-  const peak   = lerp(6000, 12000, t)     // swell=6kHz, ping=12kHz
+  // Exponential interpolation keeps neutral feeling like a ping, not a blob
+  // attack: ~5ms (snappy) → ~55ms (neutral) → 600ms (full swell)
+  const attack = 0.005 * Math.pow(120, t)
+  // decay:  ~60ms (snappy) → ~200ms (neutral) → 700ms (full swell)
+  const decay = 0.06 * Math.pow(11.67, t)
+  // peak cutoff: 8kHz (snappy) → 10kHz (neutral) → 12kHz (swell)
+  const peak = lerp(8000, 12000, t)
 
   return { attack, decay, peak }
 }
@@ -15,6 +20,8 @@ export function getTriggerShape(direction) {
 function lerp(a, b, t) {
   return a + (b - a) * t
 }
+
+const VELOCITY_GAIN = { high: 1.0, med: 0.5, low: 0.2 }
 
 // Per-lane audio nodes
 class LaneAudio {
@@ -33,6 +40,7 @@ class LaneAudio {
     this.source = null
     this.buffer = null
     this.sourceType = 'noise'   // 'noise' | 'tone' | 'sample'
+    this.noiseType = 'white'    // 'white' | 'pink' | 'brown'
     this.toneFrequency = 110    // Hz
     this.toneWaveform = 'sine'  // sine | triangle | sawtooth | square
   }
@@ -53,6 +61,14 @@ class LaneAudio {
     this.baseCutoff = hz
   }
 
+  setFilterType(type) {
+    this.filter.type = type
+  }
+
+  setNoiseType(type) {
+    this.noiseType = type
+  }
+
   startSource(loopEnd) {
     this.stopSource()
 
@@ -67,8 +83,8 @@ class LaneAudio {
       this.source.connect(this.gateGain)
       this.source.start()
     } else {
-      // noise (default)
-      this.source = new Tone.Noise('white')
+      // noise
+      this.source = new Tone.Noise(this.noiseType || 'white')
       this.source.connect(this.gateGain)
       this.source.start()
     }
@@ -83,14 +99,14 @@ class LaneAudio {
     }
   }
 
-  fireTrigger(time, direction, baseCutoff) {
+  fireTrigger(time, direction, baseCutoff, velocity = 'high') {
     const { attack, decay, peak } = getTriggerShape(direction)
     const base = baseCutoff || this.baseCutoff || 80
     const now = Tone.now()
+    const gainPeak = VELOCITY_GAIN[velocity] ?? 1.0
 
-    // Cancel from context start (time=0) to clear accumulated events from
-    // previous loop iterations, then anchor current resting values at "now"
-    // so the param holds correctly until the trigger time.
+    // Cancel from context start to clear accumulated events from previous loop
+    // iterations, then anchor current resting values at "now"
     const freq = this.filter.frequency
     freq.cancelScheduledValues(0)
     freq.setValueAtTime(base, now)
@@ -103,7 +119,7 @@ class LaneAudio {
     g.cancelScheduledValues(0)
     g.setValueAtTime(0, now)
     g.setValueAtTime(0, time)
-    g.linearRampToValueAtTime(1, time + attack)
+    g.linearRampToValueAtTime(gainPeak, time + attack)
     g.linearRampToValueAtTime(0, time + attack + decay)
   }
 
@@ -185,6 +201,16 @@ class AudioEngine {
     }
   }
 
+  setLaneNoiseType(id, type) {
+    const lane = this.lanes.get(id)
+    if (lane) {
+      lane.noiseType = type
+      if (this.playing && lane.sourceType === 'noise') {
+        lane.startSource(this.barLength)
+      }
+    }
+  }
+
   setLaneToneFrequency(id, hz) {
     const lane = this.lanes.get(id)
     if (lane) {
@@ -223,9 +249,12 @@ class AudioEngine {
     }
   }
 
+  setLaneFilterType(id, type) {
+    this.lanes.get(id)?.setFilterType(type)
+  }
+
   // Schedule all triggers for the lanes
   _scheduleTriggers(lanesData) {
-    // Clear old events
     this._clearScheduled()
 
     const transport = Tone.getTransport()
@@ -237,7 +266,12 @@ class AudioEngine {
       lane.triggers.forEach(trigger => {
         const triggerTime = trigger.position * this.barLength
         const eventId = transport.schedule((time) => {
-          laneAudio.fireTrigger(time, trigger.direction, lane.filter.baseCutoff)
+          laneAudio.fireTrigger(
+            time,
+            trigger.direction,
+            lane.filter.baseCutoff,
+            trigger.velocity ?? 'high'
+          )
         }, triggerTime)
         this.scheduledEvents.push(eventId)
       })
@@ -261,8 +295,7 @@ class AudioEngine {
     transport.loopStart = 0
     transport.loopEnd = this.barLength
 
-    // Start sources
-    this.lanes.forEach((laneAudio, id) => {
+    this.lanes.forEach((laneAudio) => {
       laneAudio.startSource(this.barLength)
     })
 
@@ -286,7 +319,6 @@ class AudioEngine {
     this._stopPlayheadRaf()
   }
 
-  // Reschedule triggers without stopping playback
   rescheduleTriggers(lanesData) {
     if (!this.playing) return
     this._scheduleTriggers(lanesData)
