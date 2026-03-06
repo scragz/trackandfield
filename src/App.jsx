@@ -33,7 +33,7 @@ export default function App() {
   }, [addTrigger])
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Header / HUD ── */}
       <header style={{
@@ -116,7 +116,7 @@ export default function App() {
       </header>
 
       {/* Lanes */}
-      <main style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+      <main style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
         {lanes.map((lane) => (
           <Lane
             key={lane.id}

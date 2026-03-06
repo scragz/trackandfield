@@ -43,6 +43,7 @@ export function Lane({
       display: 'flex',
       flexDirection: 'column',
       gap: '6px',
+      minWidth: 0,
     }}>
 
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
