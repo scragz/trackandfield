@@ -43,13 +43,13 @@ export function Lane({
       display: 'flex',
       flexDirection: 'column',
       gap: '6px',
+      minWidth: 0,
     }}>
 
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
 
         {/* Source section */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <span style={{ fontSize: '7px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>SOUNDS</span>
 
           {/* Source type selector */}
           <div style={{ display: 'flex', gap: '2px' }}>
@@ -72,7 +72,7 @@ export function Lane({
         </div>
 
         {/* Knobs */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
           <Knob
             label="Vol"
             min={0} max={1}
