@@ -53,16 +53,16 @@ export default function App() {
         }}>
           {/* T&F Logo */}
           <span style={{
-            fontSize: '10px',
+            fontSize: '9px',
             fontFamily: "'Press Start 2P', monospace",
             color: '#EE4444',
             textShadow: '1px 1px 0 #770000',
             letterSpacing: '-0.02em',
-            flexShrink: 0,
-          }}>T&amp;F</span>
+            whiteSpace: 'nowrap',
+          }}>TRACK <span style={{ color: '#FFE566' }}>&amp;</span> FIELD</span>
 
           {/* BPM knob */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
             <Knob
               label="BPM"
               min={60} max={300}
@@ -70,30 +70,25 @@ export default function App() {
               onChange={setBpm}
               decimals={0}
             />
-            <span style={{ fontSize: '10px', color: 'var(--accent)', minWidth: '28px', fontFamily: "'Press Start 2P', monospace" }}>
-              {Math.round(bpm)}
-            </span>
           </div>
 
-          {/* Play/Stop */}
+          {/* Play/Stop — icon only */}
           <button
             onClick={handleTogglePlay}
             style={{
               background: playing ? 'var(--accent)' : 'transparent',
               border: `2px solid ${playing ? 'var(--accent)' : 'var(--border)'}`,
               color: playing ? 'var(--hud-bg)' : 'var(--text)',
-              padding: '6px 12px',
-              fontSize: '9px',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
+              padding: '8px 10px',
+              fontSize: '14px',
+              lineHeight: 1,
               cursor: 'pointer',
-              fontFamily: "'Press Start 2P', monospace",
               transition: 'all 0.1s',
               boxShadow: playing ? '3px 3px 0 var(--accent-dim)' : '3px 3px 0 #000',
               flexShrink: 0,
             }}
           >
-            {playing ? '■ Stop' : '▶ Play'}
+            {playing ? '■' : '▶'}
           </button>
         </div>
       </header>
