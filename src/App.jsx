@@ -48,47 +48,29 @@ export default function App() {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '20px',
-          padding: '8px 16px',
+          gap: '12px',
+          padding: '8px 12px',
         }}>
           {/* T&F Logo */}
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0', flexShrink: 0, lineHeight: 1 }}>
-            <span style={{
-              fontSize: '16px',
-              fontFamily: "'Press Start 2P', monospace",
-              color: '#EE4444',
-              textShadow: '2px 2px 0 #770000',
-              letterSpacing: '-0.02em',
-            }}>TRACK</span>
-            <span style={{
-              fontSize: '16px',
-              fontFamily: "'Press Start 2P', monospace",
-              color: '#FFE566',
-              textShadow: '2px 2px 0 #880000',
-              margin: '0 6px',
-            }}>&amp;</span>
-            <span style={{
-              fontSize: '16px',
-              fontFamily: "'Press Start 2P', monospace",
-              color: '#EE4444',
-              textShadow: '2px 2px 0 #770000',
-              letterSpacing: '-0.02em',
-            }}>FIELD</span>
-          </div>
+          <span style={{
+            fontSize: '10px',
+            fontFamily: "'Press Start 2P', monospace",
+            color: '#EE4444',
+            textShadow: '1px 1px 0 #770000',
+            letterSpacing: '-0.02em',
+            flexShrink: 0,
+          }}>T&amp;F</span>
 
           {/* BPM knob */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
-            <span style={{ fontSize: '8px', color: 'var(--text-dim)', letterSpacing: '0.1em', fontFamily: "'Press Start 2P', monospace" }}>
-              BPM
-            </span>
             <Knob
-              label=""
+              label="BPM"
               min={60} max={300}
               value={bpm}
               onChange={setBpm}
               decimals={0}
             />
-            <span style={{ fontSize: '11px', color: 'var(--accent)', minWidth: '34px', fontFamily: "'Press Start 2P', monospace" }}>
+            <span style={{ fontSize: '10px', color: 'var(--accent)', minWidth: '28px', fontFamily: "'Press Start 2P', monospace" }}>
               {Math.round(bpm)}
             </span>
           </div>
@@ -100,7 +82,7 @@ export default function App() {
               background: playing ? 'var(--accent)' : 'transparent',
               border: `2px solid ${playing ? 'var(--accent)' : 'var(--border)'}`,
               color: playing ? 'var(--hud-bg)' : 'var(--text)',
-              padding: '6px 14px',
+              padding: '6px 12px',
               fontSize: '9px',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -108,6 +90,7 @@ export default function App() {
               fontFamily: "'Press Start 2P', monospace",
               transition: 'all 0.1s',
               boxShadow: playing ? '3px 3px 0 var(--accent-dim)' : '3px 3px 0 #000',
+              flexShrink: 0,
             }}
           >
             {playing ? '■ Stop' : '▶ Play'}
